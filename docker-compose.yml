@@ -1,1 +1,78 @@
-# Créez ici votre docker compose
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: rapidocine_db
+    environment:
+      POSTGRES_DB: rapidocine_db
+      POSTGRES_USER: rapidocine
+      POSTGRES_PASSWORD: rapidocine123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - rapidocine_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rapidocine"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Backend FastAPI
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rapidocine_api
+    environment:
+      DATABASE_URL: postgresql://rapidocine:rapidocine123@db:5432/rapidocine_db
+      DEBUG: "True"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - rapidocine_network
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        sleep 5 &&
+        echo 'Initializing database...' &&
+        python -m backend.init_db &&
+        echo 'Starting API server...' &&
+        uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  # Frontend Web
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rapidocine_web
+    networks:
+      - rapidocine_network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: rapidocine_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+      - web
+    networks:
+      - rapidocine_network
+
+networks:
+  rapidocine_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
