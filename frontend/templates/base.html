@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RapidoCine - Movie Catalog{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/App.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/card.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/movieList.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/movie.css') }}">
+    <style>
+        /* Force black background and remove any margins */
+        body {
+            background-color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow-x: hidden;
+        }
+        html {
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body>
+    {% block content %}{% endblock %}
+    
+    <script src="{{ url_for('static', path='/js/carousel.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/script.js') }}"></script>
+</body>
+</html>

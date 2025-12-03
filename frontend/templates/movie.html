@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ movie.title }} - RapidoCine{% endblock %}
+
+{% block content %}
+<div class="App">
+    <!-- Header -->
+    <div class="header">
+        <div class="headerLeft">
+            <a href="/">
+                <img class="header__icon" src="/static/images/RapidoCineLogo.png" alt="Rapido Logo" />
+            </a>
+        </div>
+    </div>
+
+    <!-- Movie Detail - Exact IMDB design -->
+    <div class="movie">
+        <div class="movie__intro">
+            <img class="movie__backdrop" src="{{ movie.backdrop_path }}" alt="{{ movie.title }}" />
+        </div>
+        <div class="movie__detail">
+            <div class="movie__detailLeft">
+                <div class="movie__posterBox">
+                    <img class="movie__poster" src="{{ movie.poster_path }}" alt="{{ movie.title }}" />
+                </div>
+            </div>
+            <div class="movie__detailRight">
+                <div class="movie__detailRightTop">
+                    <div class="movie__name">{{ movie.original_title }}</div>
+                    <div class="movie__tagline">{{ movie.tagline }}</div>
+                    <div class="movie__rating">
+                        {{ movie.vote_average }} <i class="fas fa-star"></i>
+                        <span class="movie__voteCount">{{ movie.vote_count }} votes</span>
+                    </div>  
+                    <div class="movie__runtime">{{ movie.runtime }} mins</div>
+                    <div class="movie__releaseDate">{{ movie.release_date }}</div>
+                    <div class="movie__genres">
+                        {% for genre in movie.genres %}
+                        <span class="movie__genre" id="{{ genre.id }}">{{ genre.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="movie__detailRightBottom">
+                    <div class="synopsisText">Synopsis</div>
+                    <div>{{ movie.overview }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="movie__links">
+            <div class="movie__heading">Useful Links</div>
+            {% if movie.homepage %}
+            <a href="{{ movie.homepage }}" target="_blank" style="textDecoration: none">
+                <p><span class="movie__homeButton movie__Button">Homepage <i class="newTab fas fa-external-link-alt"></i></span></p>
+            </a>
+            {% endif %}
+            {% if movie.imdb_id %}
+            <a href="https://www.imdb.com/title/{{ movie.imdb_id }}" target="_blank" style="textDecoration: none">
+                <p><span class="movie__imdbButton movie__Button">IMDb<i class="newTab fas fa-external-link-alt"></i></span></p>
+            </a>
+            {% endif %}
+        </div>
+        <div class="movie__heading">Production companies</div>
+        <div class="movie__production">
+            {% for company in movie.production_companies %}
+            {% if company.logo_path %}
+            <span class="productionCompanyImage">
+                <img class="movie__productionComapany" src="{{ company.logo_path }}" alt="{{ company.name }}" />
+                <span>{{ company.name }}</span>
+            </span>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

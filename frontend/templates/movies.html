@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}{{ list_title }} Movies - RapidoCine{% endblock %}
+
+{% block content %}
+<div class="App">
+    <!-- Header -->
+    <div class="header">
+        <div class="headerLeft">
+            <a href="/">
+                <img class="header__icon" src="/static/images/RapidoCineLogo.png" alt="Rapido Logo" />
+            </a>
+            <a href="/movies/popular" style="textDecoration: none"><span>Popular</span></a>
+            <a href="/movies/top_rated" style="textDecoration: none"><span>Top Rated</span></a>
+            <a href="/movies/wishlist" style="textDecoration: none"><span>Wishlist</span></a>
+        </div>
+    </div>
+
+    <!-- Movie List -->
+    <div class="movie__list">
+        <h2 class="list__title">{{ list_title.upper() }}</h2>
+        <div class="list__cards">
+            {% for movie in movies %}
+            <a href="/movie/{{ movie.id }}" style="textDecoration: none; color: white">
+                <div class="cards">
+                    <img class="cards__img" src="{{ movie.poster_path }}" alt="{{ movie.title }}" />
+                    <div class="cards__overlay">
+                        <div class="card__title">{{ movie.original_title }}</div>
+                        <div class="card__runtime">
+                            {{ movie.release_date }}
+                            <span class="card__rating">
+                                {{ movie.vote_average }}<i class="fas fa-star"></i>
+                            </span>
+                        </div>
+                        <div class="card__description">
+                            {{ movie.overview[:118] }}...
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% else %}
+            <div style="color: white; text-align: center; width: 100%; padding: 40px;">
+                <h3>No movies found</h3>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
