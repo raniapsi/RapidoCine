@@ -169,7 +169,7 @@ async def home(request: Request, db: Session = Depends(get_db)):
     
     return templates.TemplateResponse("index.html", {
         "request": request, 
-        "popular_movies": all_movies[:8],  
+        "popular_movies": all_movies,  
         "featured_movies": all_movies,
         "current_user": current_user
     })
@@ -565,10 +565,62 @@ async def movie_detail(request: Request, movie_id: int, db: Session = Depends(ge
     all_movies = MovieService.get_all(db, limit=5)
     similar_movies = [m for m in all_movies if m.id != movie_id][:4]
     
+    # Récupérer les commentaires du film
+    from backend.services.comment_service import CommentService
+    comments = CommentService.get_by_movie(db, movie_id)
+    
     return templates.TemplateResponse("movie.html", {
         "request": request,
         "movie": movie,
         "similar_movies": similar_movies,
+        "current_user": current_user,
+        "comments": comments
+    })
+
+@app.post("/movie/{movie_id}/comment")
+async def add_comment(
+    request: Request,
+    movie_id: int,
+    content: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Ajouter un commentaire"""
+    # Vérifier si l'utilisateur est connecté
+    if not request.session.get("user_id"):
+        return RedirectResponse(f"/movie/{movie_id}?error=login_required", status_code=302)
+    
+    # Créer le commentaire
+    from backend.services.comment_service import CommentService
+    from backend.schemas.comment import CommentCreate
+    
+    comment_data = CommentCreate(
+        user_id=request.session["user_id"],
+        movie_id=movie_id,
+        content=content
+    )
+    CommentService.create(db, comment_data)
+    
+    return RedirectResponse(f"/movie/{movie_id}", status_code=302)
+
+@app.get("/movies")
+async def movies_page(request: Request, db: Session = Depends(get_db)):
+    """Page de tous les films"""
+    # Récupérer l'utilisateur depuis la session
+    current_user = None
+    if request.session.get("user_id"):
+        current_user = {
+            "id": request.session["user_id"],
+            "username": request.session["username"]
+        }
+    
+    # Récupérer tous les films
+    all_movies = MovieService.get_all(db)
+    
+    return templates.TemplateResponse("movies.html", {
+        "request": request,
+        "movies": all_movies,
+        "list_title": "Films",
+        "type": "all",
         "current_user": current_user
     })
 
@@ -589,13 +641,13 @@ async def movie_list(request: Request, type: str, db: Session = Depends(get_db))
         # Filtrer les films avec une bonne note (à adapter selon votre modèle)
         filtered_movies = all_movies  # TODO: Ajouter un filtre par note si le champ existe
         title = "Top Rated"
-    elif type == "wishlist":
+    elif type == "watchlist":
         # TODO: Implémenter la récupération de la watchlist de l'utilisateur
         filtered_movies = MovieService.get_all(db, limit=10)
-        title = "Your Wishlist"
+        title = "Your Watchlist"
     else:
         filtered_movies = MovieService.get_all(db)
-        title = "Popular"
+        title = "Films"
     
     return templates.TemplateResponse("movies.html", {
         "request": request,
