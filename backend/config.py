@@ -16,9 +16,13 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: list = ["http://localhost", "http://localhost:8000", "http://localhost:80", "http://127.0.0.1", "*"]
     
+    # OMDb API
+    OMDB_API_KEY: str = "1ba53e51"  # Obtenez votre clé gratuite sur http://www.omdbapi.com/apikey.aspx
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "allow"  # Permet les champs supplémentaires
 
 
 @lru_cache()

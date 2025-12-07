@@ -22,9 +22,50 @@
         html {
             background-color: #000000;
         }
+        
+        /* User menu styles */
+        .user-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .user-menu a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        
+        .user-menu a:hover {
+            color: #f0ad4e;
+        }
+        
+        .user-menu .username {
+            color: #f0ad4e;
+            font-weight: bold;
+            margin-right: 15px;
+        }
     </style>
 </head>
 <body>
+    <!-- User Menu -->
+    <div class="user-menu">
+        {% if current_user %}
+            <span class="username">👤 {{ current_user.username }}</span>
+            <a href="/logout">Déconnexion</a>
+        {% else %}
+            <a href="/login">Connexion</a>
+            <a href="/register">Inscription</a>
+        {% endif %}
+    </div>
+    
     {% block content %}{% endblock %}
     
     <script src="{{ url_for('static', path='/js/carousel.js') }}"></script>

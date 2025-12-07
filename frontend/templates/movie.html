@@ -16,33 +16,30 @@
     <!-- Movie Detail - Exact IMDB design -->
     <div class="movie">
         <div class="movie__intro">
-            <img class="movie__backdrop" src="{{ movie.backdrop_path }}" alt="{{ movie.title }}" />
+            <img class="movie__backdrop" src="{{ movie.poster_url or 'https://via.placeholder.com/1280x720?text=No+Image' }}" alt="{{ movie.title }}" />
         </div>
         <div class="movie__detail">
             <div class="movie__detailLeft">
                 <div class="movie__posterBox">
-                    <img class="movie__poster" src="{{ movie.poster_path }}" alt="{{ movie.title }}" />
+                    <img class="movie__poster" src="{{ movie.poster_url or 'https://via.placeholder.com/300x450?text=No+Image' }}" alt="{{ movie.title }}" />
                 </div>
             </div>
             <div class="movie__detailRight">
                 <div class="movie__detailRightTop">
-                    <div class="movie__name">{{ movie.original_title }}</div>
-                    <div class="movie__tagline">{{ movie.tagline }}</div>
-                    <div class="movie__rating">
-                        {{ movie.vote_average }} <i class="fas fa-star"></i>
-                        <span class="movie__voteCount">{{ movie.vote_count }} votes</span>
-                    </div>  
-                    <div class="movie__runtime">{{ movie.runtime }} mins</div>
-                    <div class="movie__releaseDate">{{ movie.release_date }}</div>
+                    <div class="movie__name">{{ movie.title }}</div>
+                    <div class="movie__tagline">{{ movie.genres or '' }}</div>
+                    <div class="movie__releaseDate">{{ movie.year }}</div>
                     <div class="movie__genres">
-                        {% for genre in movie.genres %}
-                        <span class="movie__genre" id="{{ genre.id }}">{{ genre.name }}</span>
-                        {% endfor %}
+                        {% if movie.genres %}
+                            {% for genre in movie.genres.split(',') %}
+                                <span class="movie__genre">{{ genre.strip() }}</span>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                 </div>
                 <div class="movie__detailRightBottom">
                     <div class="synopsisText">Synopsis</div>
-                    <div>{{ movie.overview }}</div>
+                    <div>{{ movie.plot or 'Aucune description disponible' }}</div>
                 </div>
             </div>
         </div>

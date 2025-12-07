@@ -12,17 +12,13 @@
             {% for movie in featured_movies %}
             <div class="carousel-slide posterImage" {% if not loop.first %}style="display: none;"{% endif %}>
                 <a href="/movie/{{ movie.id }}" style="text-decoration: none; color: white; display: block; height: 100%;">
-                    <img src="{{ movie.backdrop_path }}" alt="{{ movie.title }}" style="width: 100%; height: 100%; object-fit: cover;" />
+                    <img src="{{ movie.poster_url or 'https://via.placeholder.com/500x750?text=No+Image' }}" alt="{{ movie.title }}" style="width: 100%; height: 100%; object-fit: cover;" />
                     <div class="posterImage__overlay">
-                        <div class="posterImage__title">{{ movie.original_title }}</div>
+                        <div class="posterImage__title">{{ movie.title }}</div>
                         <div class="posterImage__runtime">
-                            {{ movie.release_date }}
-                            <span class="posterImage__rating">
-                                {{ movie.vote_average }}
-                                <i class="fas fa-star"></i>
-                            </span>
+                            {{ movie.year }}
                         </div>
-                        <div class="posterImage__description">{{ movie.overview }}</div>
+                        <div class="posterImage__description">{{ movie.plot or 'Aucune description disponible' }}</div>
                     </div>
                 </a>
             </div>
@@ -53,17 +49,14 @@
                             <i class="far fa-heart"></i> <!-- Empty heart -->
                         </div>
                         
-                        <img class="cards__img" src="{{ movie.poster_path }}" alt="{{ movie.title }}" />
+                        <img class="cards__img" src="{{ movie.poster_url or 'https://via.placeholder.com/300x450?text=No+Image' }}" alt="{{ movie.title }}" />
                         <div class="cards__overlay">
-                            <div class="card__title">{{ movie.original_title }}</div>
+                            <div class="card__title">{{ movie.title }}</div>
                             <div class="card__runtime">
-                                {{ movie.release_date }}
-                                <span class="card__rating">
-                                    {{ movie.vote_average }}<i class="fas fa-star"></i>
-                                </span>
+                                {{ movie.year }}
                             </div>
                             <div class="card__description">
-                                {{ movie.overview[:118] }}...
+                                {{ (movie.plot[:118] + '...') if movie.plot and movie.plot|length > 118 else (movie.plot or 'Aucune description') }}
                             </div>
                         </div>
                     </div>

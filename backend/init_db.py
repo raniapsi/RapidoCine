@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from backend.database import SessionLocal, engine, Base
 from backend.models import User, Movie, Rating, Comment, Watchlist
 from backend.services import UserService
+from backend.services.movie_fetcher import MovieFetcherService
 
 
 def init_db():
@@ -43,52 +44,101 @@ def init_db():
             users.append(user)
         db.commit()
         
-        # Créer des films
-        movies = [
-            Movie(
-                imdb_id="tt0133093",
-                title="The Matrix",
-                year=1999,
-                poster_url="https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg",
-                plot="Un pirate informatique apprend la vraie nature de sa réalité et son rôle dans la guerre contre ses contrôleurs.",
-                genres="Action, Sci-Fi"
-            ),
-            Movie(
-                imdb_id="tt0111161",
-                title="The Shawshank Redemption",
-                year=1994,
-                poster_url="https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_SX300.jpg",
-                plot="Deux hommes emprisonnés se lient d'amitié sur plusieurs années.",
-                genres="Drama"
-            ),
-            Movie(
-                imdb_id="tt0068646",
-                title="The Godfather",
-                year=1972,
-                poster_url="https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX300.jpg",
-                plot="Le patriarche vieillissant d'une dynastie du crime organisé transfère le contrôle de son empire clandestin à son fils réticent.",
-                genres="Crime, Drama"
-            ),
-            Movie(
-                imdb_id="tt0468569",
-                title="The Dark Knight",
-                year=2008,
-                poster_url="https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg",
-                plot="Lorsque la menace connue sous le nom de Joker fait des ravages sur les habitants de Gotham, Batman doit accepter l'un des plus grands tests psychologiques.",
-                genres="Action, Crime, Drama"
-            ),
-            Movie(
-                imdb_id="tt0816692",
-                title="Interstellar",
-                year=2014,
-                poster_url="https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg",
-                plot="Une équipe d'explorateurs voyage à travers un trou de ver dans l'espace pour assurer la survie de l'humanité.",
-                genres="Adventure, Drama, Sci-Fi"
-            )
+        # Créer des films depuis OMDb API
+        print("📥 Récupération des films depuis OMDb API...")
+        
+        # Liste des IDs IMDb de films populaires à importer
+        imdb_ids = [
+            "tt0133093",  # The Matrix
+            "tt0111161",  # The Shawshank Redemption
+            "tt0068646",  # The Godfather
+            "tt0468569",  # The Dark Knight
+            "tt0816692",  # Interstellar
+            "tt0110912",  # Pulp Fiction
+            "tt0109830",  # Forrest Gump
+            "tt1375666",  # Inception
+            "tt0137523",  # Fight Club
+            "tt0167260",  # The Lord of the Rings: The Return of the King
         ]
         
-        for movie in movies:
-            db.add(movie)
+        movies = []
+        for imdb_id in imdb_ids:
+            try:
+                movie_data = MovieFetcherService.fetch_movie_by_imdb_id(imdb_id)
+                if movie_data:
+                    # Extraire l'année du champ year (peut être "1999" ou "1999-2001")
+                    year_str = movie_data.get("year", "0")
+                    try:
+                        year = int(year_str[:4]) if year_str else None
+                    except (ValueError, TypeError):
+                        year = None
+                    
+                    movie = Movie(
+                        imdb_id=movie_data["imdb_id"],
+                        title=movie_data["title"],
+                        year=year,
+                        poster_url=movie_data["poster_path"],
+                        plot=movie_data["overview"],
+                        genres=", ".join(movie_data.get("genres", []))
+                    )
+                    db.add(movie)
+                    movies.append(movie)
+                    print(f"   ✓ {movie_data['title']} ({year or 'N/A'})")
+                else:
+                    print(f"   ✗ Impossible de récupérer le film avec ID {imdb_id}")
+            except Exception as e:
+                print(f"   ✗ Erreur pour {imdb_id}: {str(e)}")
+        
+        # Si aucun film n'a pu être récupéré depuis OMDb, utiliser des données de fallback
+        if not movies:
+            print("⚠️  Échec de récupération depuis OMDb, utilisation de données de secours...")
+            movies_fallback = [
+                Movie(
+                    imdb_id="tt0133093",
+                    title="The Matrix",
+                    year=1999,
+                    poster_url="https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg",
+                    plot="Un pirate informatique apprend la vraie nature de sa réalité et son rôle dans la guerre contre ses contrôleurs.",
+                    genres="Action, Sci-Fi"
+                ),
+                Movie(
+                    imdb_id="tt0111161",
+                    title="The Shawshank Redemption",
+                    year=1994,
+                    poster_url="https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_SX300.jpg",
+                    plot="Deux hommes emprisonnés se lient d'amitié sur plusieurs années.",
+                    genres="Drama"
+                ),
+                Movie(
+                    imdb_id="tt0068646",
+                    title="The Godfather",
+                    year=1972,
+                    poster_url="https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX300.jpg",
+                    plot="Le patriarche vieillissant d'une dynastie du crime organisé transfère le contrôle de son empire clandestin à son fils réticent.",
+                    genres="Crime, Drama"
+                ),
+                Movie(
+                    imdb_id="tt0468569",
+                    title="The Dark Knight",
+                    year=2008,
+                    poster_url="https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg",
+                    plot="Lorsque la menace connue sous le nom de Joker fait des ravages sur les habitants de Gotham, Batman doit accepter l'un des plus grands tests psychologiques.",
+                    genres="Action, Crime, Drama"
+                ),
+                Movie(
+                    imdb_id="tt0816692",
+                    title="Interstellar",
+                    year=2014,
+                    poster_url="https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg",
+                    plot="Une équipe d'explorateurs voyage à travers un trou de ver dans l'espace pour assurer la survie de l'humanité.",
+                    genres="Adventure, Drama, Sci-Fi"
+                )
+            ]
+            
+            for movie in movies_fallback:
+                db.add(movie)
+            movies = movies_fallback
+        
         db.commit()
         
         # Créer des notes

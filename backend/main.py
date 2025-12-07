@@ -1,12 +1,15 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from typing import Optional
+from sqlalchemy.orm import Session
 from backend.config import get_settings
-from backend.database import engine, Base
+from backend.database import engine, Base, get_db
 from backend.routers import users_router, movies_router, ratings_router, comments_router, watchlist_router
+from backend.services import MovieService
 
 # Créer les tables
 Base.metadata.create_all(bind=engine)
@@ -24,6 +27,16 @@ app = FastAPI(
     openapi_url="/api/openapi.json"
 )
 
+# Configuration Sessions (AVANT CORS pour priorité)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key="votre-cle-secrete-changez-moi-en-production",  # TODO: Mettre dans .env
+    session_cookie="rapidocine_session",
+    max_age=86400,  # 24 heures
+    same_site="lax",
+    https_only=False  # True en production avec HTTPS
+)
+
 # Configuration CORS
 app.add_middleware(
     CORSMiddleware,
@@ -37,7 +50,131 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="./frontend/static"), name="static")
 templates = Jinja2Templates(directory="./frontend/templates")
 
-movies_data = [
+# Include API routers
+app.include_router(users_router, prefix="/api")
+app.include_router(movies_router, prefix="/api")
+app.include_router(ratings_router, prefix="/api")
+app.include_router(comments_router, prefix="/api")
+app.include_router(watchlist_router, prefix="/api")
+
+
+# ========== AUTHENTICATION ROUTES ==========
+from fastapi import Form
+from backend.services import UserService
+
+@app.get("/login")
+async def login_page(request: Request):
+    """Page de connexion"""
+    # Rediriger si déjà connecté
+    if request.session.get("user_id"):
+        return RedirectResponse("/", status_code=302)
+    
+    return templates.TemplateResponse("login.html", {
+        "request": request,
+        "error": request.query_params.get("error")
+    })
+
+@app.post("/login")
+async def login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Traiter la connexion"""
+    from backend.models import User
+    
+    # Récupérer l'utilisateur
+    user = db.query(User).filter(User.username == username).first()
+    
+    if not user or not UserService.verify_password(password, user.password_hash):
+        return RedirectResponse("/login?error=invalid", status_code=302)
+    
+    # Créer la session
+    request.session["user_id"] = user.id
+    request.session["username"] = user.username
+    
+    return RedirectResponse("/", status_code=302)
+
+@app.get("/register")
+async def register_page(request: Request):
+    """Page d'inscription"""
+    # Rediriger si déjà connecté
+    if request.session.get("user_id"):
+        return RedirectResponse("/", status_code=302)
+    
+    return templates.TemplateResponse("register.html", {
+        "request": request,
+        "error": request.query_params.get("error")
+    })
+
+@app.post("/register")
+async def register(
+    request: Request,
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Traiter l'inscription"""
+    from backend.models import User
+    
+    # Vérifier si username existe déjà
+    existing_user = db.query(User).filter(User.username == username).first()
+    if existing_user:
+        return RedirectResponse("/register?error=username_exists", status_code=302)
+    
+    # Vérifier si email existe déjà
+    existing_email = db.query(User).filter(User.email == email).first()
+    if existing_email:
+        return RedirectResponse("/register?error=email_exists", status_code=302)
+    
+    # Créer l'utilisateur
+    new_user = User(
+        username=username,
+        email=email,
+        password_hash=UserService.hash_password(password)
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    # Créer la session automatiquement
+    request.session["user_id"] = new_user.id
+    request.session["username"] = new_user.username
+    
+    return RedirectResponse("/", status_code=302)
+
+@app.get("/logout")
+async def logout(request: Request):
+    """Déconnexion"""
+    request.session.clear()
+    return RedirectResponse("/login", status_code=302)
+
+
+# ========== FRONTEND ROUTES ==========
+@app.get("/")
+async def home(request: Request, db: Session = Depends(get_db)):
+    """Home page with carousel and movie list"""
+    # Récupérer l'utilisateur depuis la session
+    current_user = None
+    if request.session.get("user_id"):
+        current_user = {
+            "id": request.session["user_id"],
+            "username": request.session["username"]
+        }
+    
+    # Récupérer les films depuis la base de données
+    all_movies = MovieService.get_all(db)
+    
+    return templates.TemplateResponse("index.html", {
+        "request": request, 
+        "popular_movies": all_movies[:8],  
+        "featured_movies": all_movies,
+        "current_user": current_user
+    })
+
+movies_data_old = [
     {
         "id": 1,
         "title": "The Shawshank Redemption",
@@ -408,72 +545,87 @@ movies_data = [
     }
 ]
 
-# Include API routers
-app.include_router(users_router, prefix="/api")
-app.include_router(movies_router, prefix="/api")
-app.include_router(ratings_router, prefix="/api")
-app.include_router(comments_router, prefix="/api")
-app.include_router(watchlist_router, prefix="/api")
-
-# Your frontend routes
-@app.get("/")
-async def home(request: Request):
-    """Home page with carousel and movie list"""
-    return templates.TemplateResponse("index.html", {
-        "request": request, 
-        "popular_movies": movies_data[:8],  
-        "featured_movies": movies_data
-    })
-
 @app.get("/movie/{movie_id}")
-async def movie_detail(request: Request, movie_id: int):
+async def movie_detail(request: Request, movie_id: int, db: Session = Depends(get_db)):
     """Movie detail page"""
-    movie = next((m for m in movies_data if m["id"] == movie_id), None)
+    # Récupérer l'utilisateur depuis la session
+    current_user = None
+    if request.session.get("user_id"):
+        current_user = {
+            "id": request.session["user_id"],
+            "username": request.session["username"]
+        }
+    
+    # Récupérer le film depuis la base de données
+    movie = MovieService.get_by_id(db, movie_id)
     if not movie:
         return RedirectResponse("/")
     
-    similar_movies = [m for m in movies_data if m["id"] != movie_id][:4]
+    # Récupérer des films similaires (pour l'instant, simplement d'autres films)
+    all_movies = MovieService.get_all(db, limit=5)
+    similar_movies = [m for m in all_movies if m.id != movie_id][:4]
     
     return templates.TemplateResponse("movie.html", {
         "request": request,
         "movie": movie,
-        "similar_movies": similar_movies
+        "similar_movies": similar_movies,
+        "current_user": current_user
     })
 
 @app.get("/movies/{type}")
-async def movie_list(request: Request, type: str):
+async def movie_list(request: Request, type: str, db: Session = Depends(get_db)):
     """Movie list page by type"""
+    # Récupérer l'utilisateur depuis la session
+    current_user = None
+    if request.session.get("user_id"):
+        current_user = {
+            "id": request.session["user_id"],
+            "username": request.session["username"]
+        }
+    
+    # Récupérer les films selon le type
     if type == "top_rated":
-        filtered_movies = [m for m in movies_data if m["vote_average"] >= 8.5]
+        all_movies = MovieService.get_all(db)
+        # Filtrer les films avec une bonne note (à adapter selon votre modèle)
+        filtered_movies = all_movies  # TODO: Ajouter un filtre par note si le champ existe
         title = "Top Rated"
     elif type == "wishlist":
-        filtered_movies = movies_data[-2:].copy()
-        for movie in filtered_movies:
-            movie["release_date"] = "2024"
+        # TODO: Implémenter la récupération de la watchlist de l'utilisateur
+        filtered_movies = MovieService.get_all(db, limit=10)
         title = "Your Wishlist"
     else:
-        filtered_movies = movies_data
+        filtered_movies = MovieService.get_all(db)
         title = "Popular"
     
     return templates.TemplateResponse("movies.html", {
         "request": request,
         "movies": filtered_movies,
         "list_title": title,
-        "type": type
+        "type": type,
+        "current_user": current_user
     })
 
 @app.get("/search")
-async def search_movies(request: Request, q: Optional[str] = None):
+async def search_movies(request: Request, q: Optional[str] = None, db: Session = Depends(get_db)):
     """Search movies"""
+    # Récupérer l'utilisateur depuis la session
+    current_user = None
+    if request.session.get("user_id"):
+        current_user = {
+            "id": request.session["user_id"],
+            "username": request.session["username"]
+        }
+    
     results = []
     if q:
-        results = [m for m in movies_data if q.lower() in m["title"].lower()]
+        results = MovieService.search_by_title(db, q)
     
     return templates.TemplateResponse("movies.html", {
         "request": request,
         "movies": results,
         "list_title": f"Search Results for '{q}'" if q else "Search",
-        "type": "search"
+        "type": "search",
+        "current_user": current_user
     })
 
 # API root
@@ -490,12 +642,13 @@ def health_check():
     return {"status": "healthy"}
 
 @app.get("/debug/movies")
-async def debug_movies():
+async def debug_movies(db: Session = Depends(get_db)):
     """Debug endpoint to see all movies"""
+    all_movies = MovieService.get_all(db)
     return {
-        "total_movies": len(movies_data),
-        "movies": movies_data,
-        "first_8": movies_data[:8]
+        "total_movies": len(all_movies),
+        "movies": all_movies,
+        "first_8": all_movies[:8]
     }
 
 if __name__ == "__main__":
