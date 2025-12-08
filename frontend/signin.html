@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RapidoCine — Connexion / Inscription</title>
+    <style>
+        /* ...simple isolated styles suitable for the auth page... */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+        .card { width: 100%; max-width: 720px; background:white; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.2); padding:24px; display:flex; gap:20px; }
+        .panel { flex:1; }
+        h2 { color:#333; margin-bottom:12px; }
+        .form { display:flex; flex-direction:column; gap:10px; }
+        input { padding:10px; border:2px solid #e6e6e6; border-radius:8px; font-size:0.95rem; }
+        .btn { padding:10px 14px; border:none; border-radius:8px; background:#667eea; color:white; cursor:pointer; }
+        .btn.secondary { background:#f0f0f0; color:#333; border:1px solid #ddd; }
+        .switch { font-size:0.9rem; color:#555; margin-top:8px; }
+        .message { margin-bottom:10px; padding:10px; border-radius:8px; }
+        .error { background:#fee; color:#b00; }
+        .success { background:#efe; color:#080; }
+        .center { text-align:center; }
+        @media(max-width:720px){ .card { flex-direction:column; } }
+    </style>
+</head>
+<body>
+    <div class="card" role="main">
+        <div class="panel">
+            <h2>Connexion</h2>
+            <div id="signin-message"></div>
+            <form id="signin-form" class="form" onsubmit="event.preventDefault(); signin();">
+                <input id="signin-username" type="text" placeholder="Nom d'utilisateur" required />
+                <input id="signin-password" type="password" placeholder="Mot de passe" required />
+                <div style="display:flex;gap:10px;">
+                    <button class="btn" type="submit">Se connecter</button>
+                    <a class="btn secondary" href="index.html" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;">Retour</a>
+                </div>
+                <div class="switch">Pas de compte ? <a href="#signup" onclick="showPanel('signup')">S'inscrire</a></div>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>Inscription</h2>
+            <div id="signup-message"></div>
+            <form id="signup-form" class="form" onsubmit="event.preventDefault(); signup();">
+                <input id="signup-username" type="text" placeholder="Nom d'utilisateur" required />
+                <input id="signup-email" type="email" placeholder="Email (optionnel)" />
+                <input id="signup-password" type="password" placeholder="Mot de passe (min 6)" required />
+                <input id="signup-password-confirm" type="password" placeholder="Confirmer le mot de passe" required />
+                <div style="display:flex;gap:10px;">
+                    <button class="btn" type="submit">Créer un compte</button>
+                    <button class="btn secondary" type="button" onclick="showPanel('signin')">J'ai déjà un compte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+
+        function showPanel(name) {
+            // simple UI focus: scroll to chosen form (keeps both visible on wide screens)
+            if (name === 'signup') {
+                document.getElementById('signup-username').focus();
+            } else {
+                document.getElementById('signin-username').focus();
+            }
+        }
+
+        function showMessage(elementId, text, type = 'error') {
+            const el = document.getElementById(elementId);
+            el.innerHTML = `<div class="message ${type}">${text}</div>`;
+            setTimeout(()=> el.innerHTML = '', 4000);
+        }
+
+        async function signin() {
+            const username = document.getElementById('signin-username').value.trim();
+            const password = document.getElementById('signin-password').value;
+            if (!username || !password) { showMessage('signin-message','Veuillez remplir tous les champs','error'); return; }
+
+            try {
+                const res = await fetch(`${API_URL}/users/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                if (!res.ok) {
+                    const text = await res.text().catch(()=>null);
+                    showMessage('signin-message', text || 'Échec de la connexion', 'error');
+                    return;
+                }
+                const data = await res.json();
+                // store user and redirect
+                localStorage.setItem('rapidoUser', JSON.stringify(data));
+                showMessage('signin-message','Connexion réussie — redirection...','success');
+                setTimeout(()=> window.location.href = 'index.html', 700);
+            } catch (err) {
+                showMessage('signin-message','Erreur réseau lors de la connexion','error');
+            }
+        }
+
+        async function signup() {
+            const username = document.getElementById('signup-username').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            const password = document.getElementById('signup-password').value;
+            const password2 = document.getElementById('signup-password-confirm').value;
+
+            if (!username || !password) { showMessage('signup-message','Remplissez les champs requis','error'); return; }
+            if (password.length < 6) { showMessage('signup-message','Mot de passe trop court','error'); return; }
+            if (password !== password2) { showMessage('signup-message','Les mots de passe ne correspondent pas','error'); return; }
+
+            try {
+                const res = await fetch(`${API_URL}/users/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                if (!res.ok) {
+                    const body = await res.text().catch(()=>null);
+                    showMessage('signup-message', body || 'Erreur lors de l\'inscription', 'error');
+                    return;
+                }
+
+                const user = await res.json();
+                // auto-login: save user and redirect back
+                localStorage.setItem('rapidoUser', JSON.stringify(user));
+                showMessage('signup-message','Compte créé — redirection...', 'success');
+                setTimeout(()=> window.location.href = 'index.html', 700);
+            } catch (err) {
+                showMessage('signup-message','Erreur réseau lors de l\'inscription','error');
+            }
+        }
+
+        // UX: focus first field
+        document.getElementById('signin-username').focus();
+    </script>
+</body>
+</html>
+
