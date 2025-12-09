@@ -74,6 +74,54 @@
         .wishlist-heart i { font-size: 18px; color: white; }
         .wishlist-heart.active i { color: #ff0000; }
         .wishlist-heart.active { background-color: rgba(255, 0, 0, 0.9); }
+
+        /* Filter Section Styles */
+        .filter-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 20px 40px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .filter-section h3 {
+            color: #f0ad4e;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover {
+            background: rgba(240, 173, 78, 0.3);
+            border-color: #f0ad4e;
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background: #f0ad4e;
+            color: #000000;
+            border-color: #f0ad4e;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -116,6 +164,57 @@
           // Optionnel: afficher une notification
           console.error('Wishlist toggle failed', err);
         }
+      });
+
+      // Genre Filter Functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const movieCards = document.querySelectorAll('.cards');
+        const listTitle = document.getElementById('list-title');
+        const originalTitle = listTitle ? listTitle.textContent : '';
+
+        filterButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const selectedGenre = this.getAttribute('data-genre');
+            
+            // Update active button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter movies
+            let visibleCount = 0;
+            movieCards.forEach(card => {
+              const cardLink = card.closest('a');
+              if (!cardLink) return;
+              
+              const movieGenres = cardLink.getAttribute('data-genres') || '';
+              
+              if (selectedGenre === 'all') {
+                cardLink.style.display = '';
+                visibleCount++;
+              } else {
+                const genreList = movieGenres.toLowerCase().split(',').map(g => g.trim());
+                const shouldShow = genreList.some(g => g.includes(selectedGenre.toLowerCase()));
+                
+                if (shouldShow) {
+                  cardLink.style.display = '';
+                  visibleCount++;
+                } else {
+                  cardLink.style.display = 'none';
+                }
+              }
+            });
+            
+            // Update title
+            if (listTitle) {
+              if (selectedGenre === 'all') {
+                listTitle.textContent = originalTitle;
+              } else {
+                listTitle.textContent = `FILMS - ${selectedGenre.toUpperCase()} (${visibleCount})`;
+              }
+            }
+          });
+        });
       });
     </script>
 </body>

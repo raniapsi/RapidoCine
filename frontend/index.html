@@ -305,6 +305,48 @@
             resize: vertical;
             min-height: 60px;
         }
+
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .filter-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .filter-btn:hover {
+            background: #e8e8e8;
+            border-color: #667eea;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -342,6 +384,24 @@
             </div>
         </div>
 
+        <div class="filter-section" id="filter-section" style="display: none;">
+            <h3>🎭 Filtrer par genre</h3>
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterByGenre('all')">Tous</button>
+                <button class="filter-btn" onclick="filterByGenre('Action')">Action</button>
+                <button class="filter-btn" onclick="filterByGenre('Comedy')">Comédie</button>
+                <button class="filter-btn" onclick="filterByGenre('Drama')">Drame</button>
+                <button class="filter-btn" onclick="filterByGenre('Thriller')">Thriller</button>
+                <button class="filter-btn" onclick="filterByGenre('Horror')">Horreur</button>
+                <button class="filter-btn" onclick="filterByGenre('Romance')">Romance</button>
+                <button class="filter-btn" onclick="filterByGenre('Sci-Fi')">Science-Fiction</button>
+                <button class="filter-btn" onclick="filterByGenre('Adventure')">Aventure</button>
+                <button class="filter-btn" onclick="filterByGenre('Animation')">Animation</button>
+                <button class="filter-btn" onclick="filterByGenre('Crime')">Crime</button>
+                <button class="filter-btn" onclick="filterByGenre('Fantasy')">Fantasy</button>
+            </div>
+        </div>
+
         <div class="results-section">
             <h2 id="results-title">Films disponibles</h2>
             <div id="results" class="results-grid"></div>
@@ -353,6 +413,8 @@
         const API_URL = 'http://localhost:8000/api';
         let currentUser = null;
         let currentTab = 'movies';
+        let allMovies = [];
+        let currentGenreFilter = 'all';
 
         // Charger les films au démarrage
         loadMovies();
@@ -401,12 +463,15 @@
 
             if (tab === 'movies') {
                 document.getElementById('search-section').style.display = 'block';
+                document.getElementById('filter-section').style.display = 'block';
                 loadMovies();
             } else if (tab === 'watchlist') {
                 document.getElementById('search-section').style.display = 'none';
+                document.getElementById('filter-section').style.display = 'none';
                 loadWatchlist();
             } else if (tab === 'ratings') {
                 document.getElementById('search-section').style.display = 'none';
+                document.getElementById('filter-section').style.display = 'none';
                 loadUserRatings();
             }
         }
@@ -415,11 +480,40 @@
             showLoading();
             try {
                 const response = await fetch(`${API_URL}/movies/`);
-                const movies = await response.json();
-                displayMovies(movies, 'Films disponibles');
+                allMovies = await response.json();
+                applyGenreFilter();
             } catch (error) {
                 showMessage('Erreur de chargement des films', 'error');
             }
+        }
+
+        function filterByGenre(genre) {
+            currentGenreFilter = genre;
+            
+            // Mettre à jour les boutons actifs
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            applyGenreFilter();
+        }
+
+        function applyGenreFilter() {
+            let filteredMovies = allMovies;
+            
+            if (currentGenreFilter !== 'all') {
+                filteredMovies = allMovies.filter(movie => {
+                    if (!movie.genre) return false;
+                    const genres = movie.genre.split(',').map(g => g.trim());
+                    return genres.some(g => g.toLowerCase().includes(currentGenreFilter.toLowerCase()));
+                });
+            }
+            
+            const title = currentGenreFilter === 'all' 
+                ? 'Films disponibles' 
+                : `Films - ${currentGenreFilter}`;
+            displayMovies(filteredMovies, title);
         }
 
         async function searchMovies() {

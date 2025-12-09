@@ -16,12 +16,31 @@
         </div>
     </div>
 
+    <!-- Filter Section -->
+    <div class="filter-section" style="margin: 20px 40px;">
+        <h3>🎭 Filtrer par genre</h3>
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-genre="all">Tous</button>
+            <button class="filter-btn" data-genre="Action">Action</button>
+            <button class="filter-btn" data-genre="Comedy">Comédie</button>
+            <button class="filter-btn" data-genre="Drama">Drame</button>
+            <button class="filter-btn" data-genre="Thriller">Thriller</button>
+            <button class="filter-btn" data-genre="Horror">Horreur</button>
+            <button class="filter-btn" data-genre="Romance">Romance</button>
+            <button class="filter-btn" data-genre="Sci-Fi">Sci-Fi</button>
+            <button class="filter-btn" data-genre="Adventure">Aventure</button>
+            <button class="filter-btn" data-genre="Animation">Animation</button>
+            <button class="filter-btn" data-genre="Crime">Crime</button>
+            <button class="filter-btn" data-genre="Fantasy">Fantasy</button>
+        </div>
+    </div>
+
     <!-- Movie List -->
     <div class="movie__list">
-        <h2 class="list__title">{{ list_title.upper() }}</h2>
-        <div class="list__cards">
+        <h2 class="list__title" id="list-title">{{ list_title.upper() }}</h2>
+        <div class="list__cards" id="movie-cards">
             {% for movie in movies %}
-            <a href="/movie/{{ movie.id }}" style="textDecoration: none; color: white">
+            <a href="/movie/{{ movie.id }}" style="textDecoration: none; color: white" data-genres="{{ movie.genre or movie.genres or '' }}">
                 <div class="cards">
                     <!-- Coeur wishlist -->
                     <div class="wishlist-heart {% if watchlist_ids and (movie.id in watchlist_ids) %}active{% endif %}"
