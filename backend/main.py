@@ -84,11 +84,19 @@ async def home(request: Request, db: Session = Depends(get_db)):
     popular_movies = [m for m in all_movies if m.plot and m.poster_url]
     featured_movies = random.sample(popular_movies, min(len(popular_movies), 5)) if popular_movies else []
 
+    # Préparer la wishlist de l'utilisateur connecté
+    watchlist_ids = []
+    if current_user:
+        from backend.models import Watchlist
+        watchlist_ids = [row[0] for row in db.query(Watchlist.movie_id).filter(Watchlist.user_id == current_user["id"]).all()]
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "current_user": current_user,
         "movies": all_movies,
-        "featured_movies": featured_movies,  # <-- fourni au template
+        "popular_movies": popular_movies,
+        "featured_movies": featured_movies,
+        "watchlist_ids": watchlist_ids,  # <-- ajout
         "api_url": "/api"
     })
 
@@ -454,6 +462,36 @@ async def api_set_movie_rating(movie_id: int, request: Request, db: Session = De
         "count": int(count or 0),
         "user_rating": value
     }
+
+@app.post("/api/web/watchlist/toggle")
+async def toggle_watchlist(request: Request, db: Session = Depends(get_db)):
+    """Toggle un film dans la watchlist (utilisateur de la session)."""
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return HTMLResponse(status_code=401, content='{"error":"unauthorized"}', media_type="application/json")
+    data = await request.json()
+    try:
+        movie_id = int(data.get("movie_id", 0))
+    except Exception:
+        movie_id = 0
+    if not movie_id:
+        return HTMLResponse(status_code=400, content='{"error":"movie_id required"}', media_type="application/json")
+
+    from backend.models import Watchlist
+    existing = db.query(Watchlist).filter(
+        Watchlist.user_id == user_id,
+        Watchlist.movie_id == movie_id
+    ).first()
+
+    if existing:
+        db.delete(existing)
+        db.commit()
+        return {"active": False}
+    else:
+        w = Watchlist(user_id=user_id, movie_id=movie_id, status="planned")
+        db.add(w)
+        db.commit()
+        return {"active": True}
 
 # DEV: removed unused demo payload that caused SyntaxError
 # End of file

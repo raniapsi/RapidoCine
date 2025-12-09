@@ -53,8 +53,9 @@
                 <a href="/movie/{{ movie.id }}" style="text-decoration: none; color: white; display: inline-block;">
                     <div class="cards">
                         <!-- Heart Icon for Wishlist -->
-                        <div class="wishlist-heart" data-movie-id="{{ movie.id }}">
-                            <i class="far fa-heart"></i> <!-- Empty heart -->
+                        <div class="wishlist-heart {% if watchlist_ids and (movie.id in watchlist_ids) %}active{% endif %}" 
+                             data-movie-id="{{ movie.id }}">
+                            <i class="{% if watchlist_ids and (movie.id in watchlist_ids) %}fas{% else %}far{% endif %} fa-heart"></i>
                         </div>
                         
                         <img class="cards__img" src="{{ movie.poster_url or 'https://via.placeholder.com/300x450?text=No+Image' }}" alt="{{ movie.title }}" />
@@ -103,6 +104,7 @@ body, html, .App, .poster, .movie__list, .list__cards {
 
 /* Make cards larger if needed */
 .cards {
+    position: relative; /* <-- pour positionner le coeur */
     min-width: 220px !important;
     height: 330px !important;
 }
@@ -156,69 +158,45 @@ body, html, .App, .poster, .movie__list, .list__cards {
 <!-- JavaScript for Wishlist -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Get all heart elements
     const hearts = document.querySelectorAll('.wishlist-heart');
-    
-    // Load saved wishlist from localStorage
-    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-    
-    // Initialize heart states
+
     hearts.forEach(heart => {
-        const movieId = heart.getAttribute('data-movie-id');
-        if (wishlist.includes(parseInt(movieId))) {
-            heart.classList.add('active');
-            heart.innerHTML = '<i class="fas fa-heart"></i>'; // Filled heart
-        }
-    });
-    
-    // Add click event to each heart
-    hearts.forEach(heart => {
-        heart.addEventListener('click', function(e) {
+        heart.addEventListener('click', async function(e) {
             e.preventDefault();
-            e.stopPropagation(); // Prevent clicking through to movie link
-            
-            const movieId = this.getAttribute('data-movie-id');
-            let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-            
-            if (this.classList.contains('active')) {
-                // Remove from wishlist
-                wishlist = wishlist.filter(id => id != movieId);
-                this.classList.remove('active');
-                this.innerHTML = '<i class="far fa-heart"></i>';
-            } else {
-                // Add to wishlist
-                wishlist.push(parseInt(movieId));
-                this.classList.add('active');
-                this.innerHTML = '<i class="fas fa-heart"></i>';
+            e.stopPropagation();
+            const movieId = parseInt(this.getAttribute('data-movie-id'));
+
+            try {
+                const resp = await fetch('/api/web/watchlist/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ movie_id: movieId })
+                });
+                if (resp.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                if (!resp.ok) return;
+                const { active } = await resp.json();
+                this.classList.toggle('active', active);
+                this.innerHTML = `<i class="${active ? 'fas' : 'far'} fa-heart"></i>`;
+                showNotification(active ? 'Ajouté à la watchlist!' : 'Retiré de la watchlist!');
+            } catch (err) {
+                showNotification('Erreur réseau', 'error');
             }
-            
-            // Save to localStorage
-            localStorage.setItem('wishlist', JSON.stringify(wishlist));
-            
-            // Optional: Show notification
-            showNotification(this.classList.contains('active') ? 
-                'Added to wishlist!' : 'Removed from wishlist!');
         });
     });
-    
+
     function showNotification(message) {
-        // Create notification element
         const notification = document.createElement('div');
         notification.textContent = message;
         notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #ff0000;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            z-index: 9999;
-            font-weight: bold;
+            position: fixed; top: 20px; right: 20px;
+            background-color: #ff0000; color: white;
+            padding: 10px 20px; border-radius: 5px;
+            z-index: 9999; font-weight: bold;
             animation: fadeInOut 2s ease-in-out;
         `;
-        
-        // Add animation
         const style = document.createElement('style');
         style.textContent = `
             @keyframes fadeInOut {
@@ -229,13 +207,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         `;
         document.head.appendChild(style);
-        
         document.body.appendChild(notification);
-        
-        // Remove notification after animation
-        setTimeout(() => {
-            notification.remove();
-        }, 2000);
+        setTimeout(() => notification.remove(), 2000);
     }
 });
 </script>
