@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 load_dotenv()  # Charger les variables d'environnement
 
 # DEBUG TEMPORAIRE
-print(f"🔑 OMDB_API_KEY loaded: {os.getenv('OMDB_API_KEY', 'NOT FOUND')}")
+print(f" OMDB_API_KEY loaded: {os.getenv('OMDB_API_KEY', 'NOT FOUND')}")
 
 # Créer les tables
 Base.metadata.create_all(bind=engine)
@@ -75,6 +75,21 @@ app.include_router(watchlist_router, prefix="/api")
 
 
 # ========== FRONTEND ROUTES ==========
+
+async def enrich_movies_with_imdb(movies: list) -> list:
+    """Enrichit les films avec leur note IMDb et les trie par note décroissante."""
+    enriched = []
+    for movie in movies:
+        imdb_rating = None
+        if movie.imdb_id:
+            imdb_rating = await fetch_imdb_rating(movie.imdb_id)
+        setattr(movie, 'imdb_rating_5', round(imdb_rating / 2, 1) if imdb_rating else None)
+        setattr(movie, 'imdb_rating_10', imdb_rating)
+        enriched.append(movie)
+    
+    # Trier par note IMDb décroissante (les films sans note à la fin)
+    enriched.sort(key=lambda m: (m.imdb_rating_10 is None, -(m.imdb_rating_10 or 0)))
+    return enriched
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
@@ -202,7 +217,7 @@ async def logout(request: Request):
 
 @app.get("/movies", response_class=HTMLResponse)
 async def all_movies_page(request: Request, db: Session = Depends(get_db)):
-    """Page showing all movies."""
+    """Page showing all movies sorted by IMDb rating."""
     current_user = None
     if request.session.get("user_id"):
         current_user = {
@@ -211,6 +226,9 @@ async def all_movies_page(request: Request, db: Session = Depends(get_db)):
         }
     
     all_movies = MovieService.get_all(db)
+    
+    # Enrichir et trier par note IMDb
+    sorted_movies = await enrich_movies_with_imdb(all_movies)
 
     # Ajouter watchlist_ids
     watchlist_ids = []
@@ -220,11 +238,12 @@ async def all_movies_page(request: Request, db: Session = Depends(get_db)):
 
     return templates.TemplateResponse("movies.html", {
         "request": request, 
-        "movies": all_movies,
-        "list_title": "Tous les films",
+        "movies": sorted_movies,
+        "list_title": "Tous les films (triés par note IMDb)",
         "title": "Films",
         "current_user": current_user,
-        "watchlist_ids": watchlist_ids
+        "watchlist_ids": watchlist_ids,
+        "show_imdb_rating": True  # Afficher les notes IMDb
     })
 
 @app.get("/movies/{type}", response_class=HTMLResponse)
@@ -286,14 +305,14 @@ async def movie_list(request: Request, type: str, db: Session = Depends(get_db))
         return templates.TemplateResponse("movies.html", {
             "request": request,
             "movies": filtered_movies,
-            "list_title": "Top Rated",
-            "title": "Top Rated",
+            "list_title": "Mon Classement",
+            "title": "Mon Classement",
             "current_user": current_user,
-            "watchlist_ids": watchlist_ids
+            "watchlist_ids": watchlist_ids,
+            "show_imdb_rating": False  # PAS de notes IMDb dans Mon Classement
         })
 
     elif type == "watchlist":
-        # Minimal placeholder: require login and reuse available movies
         if not current_user:
             return RedirectResponse(url="/login", status_code=303)
         
@@ -307,24 +326,29 @@ async def movie_list(request: Request, type: str, db: Session = Depends(get_db))
             .all()
         )
         
+        # PAS d'enrichissement IMDb pour la watchlist
+        
         return templates.TemplateResponse("movies.html", {
             "request": request,
             "movies": watchlist_movies,
             "list_title": "Ma Watchlist",
             "title": "Ma Watchlist",
             "current_user": current_user,
-            "watchlist_ids": watchlist_ids
+            "watchlist_ids": watchlist_ids,
+            "show_imdb_rating": False  # PAS de notes IMDb dans la watchlist
         })
 
-    # default
+    # default: all movies sorted by IMDb
     all_movies = MovieService.get_all(db)
+    sorted_movies = await enrich_movies_with_imdb(all_movies)
     return templates.TemplateResponse("movies.html", {
         "request": request,
-        "movies": all_movies,
-        "list_title": "Films",
+        "movies": sorted_movies,
+        "list_title": "Films (triés par note IMDb)",
         "title": "Films",
         "current_user": current_user,
-        "watchlist_ids": watchlist_ids
+        "watchlist_ids": watchlist_ids,
+        "show_imdb_rating": True  # Afficher les notes IMDb
     })
 
 @app.get("/top-rated", response_class=HTMLResponse)
@@ -343,14 +367,14 @@ async def top_rated_page(request: Request, db: Session = Depends(get_db)):
 
     from backend.models import Rating, Movie
 
-    # ✅ UNIQUEMENT les notes de CET utilisateur (user_id = current_user["id"])
+   
     # Prendre la DERNIÈRE note par film (au cas où l'utilisateur aurait changé sa note)
     latest_q = (
         db.query(
             Rating.movie_id.label("movie_id"),
             func.max(Rating.id).label("latest_id")
         )
-        .filter(Rating.user_id == user_id)  # ✅ IMPORTANT: filtrer par user_id
+        .filter(Rating.user_id == user_id)  
         .group_by(Rating.movie_id)
         .subquery()
     )
@@ -368,7 +392,7 @@ async def top_rated_page(request: Request, db: Session = Depends(get_db)):
         .all()
     )
 
-    # ✅ Tri PYTHON strict: 5★ → 1★, puis alphabétique
+  
     rated_movies = [{"movie": M, "rating": int(s)} for M, s in rows]
     rated_movies.sort(key=lambda x: (-x["rating"], x["movie"].title))
 
@@ -575,19 +599,19 @@ async def fetch_imdb_rating(imdb_id: str) -> float:
             
             if response.status_code == 200:
                 data = response.json()
-                print(f"📦 Response data: {data}")
+                print(f"Response data: {data}")
                 
                 if data.get("Response") == "True" and "imdbRating" in data:
                     rating = float(data["imdbRating"])
-                    print(f"✅ Rating found: {rating}")
+                    print(f"Rating found: {rating}")
                     IMDB_RATING_CACHE[imdb_id] = rating
                     return rating
                 else:
-                    print(f"❌ Invalid response: {data}")
+                    print(f"Invalid response: {data}")
             else:
-                print(f"❌ HTTP Error {response.status_code}")
+                print(f"HTTP Error {response.status_code}")
     except Exception as e:
-        print(f"❌ Erreur OMDB pour {imdb_id}: {e}")
+        print(f"Erreur OMDB pour {imdb_id}: {e}")
     
     return None
 
