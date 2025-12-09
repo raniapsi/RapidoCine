@@ -1,5 +1,6 @@
 (function () {
-  const apiBase = window.API_URL || 'http://localhost:8000/api';
+  const apiBase = window.API_URL || '/api';
+  const lsKey = (movieId) => `rc:rating:${movieId}`;
 
   function createStar(index, currentValue) {
     const star = document.createElement('button');
@@ -30,9 +31,13 @@
 
         const data = await submitRating(movieId, value);
         if (data.error) {
+          // Persist locally on any failure so selection survives refresh
+          try { localStorage.setItem(lsKey(movieId), String(value)); } catch {}
           updateText(ratingTextEl, avgEl, null, data.average, data.count, data.error);
           return;
         }
+        // Saved in DB, clear any local fallback
+        try { localStorage.removeItem(lsKey(movieId)); } catch {}
         renderStars(container, data.user_rating || value);
         attachStarListeners(container, movieId, ratingTextEl, avgEl);
         updateText(ratingTextEl, avgEl, data.user_rating || value, data.average, data.count);
@@ -86,7 +91,7 @@
   function updateText(ratingTextEl, avgEl, userRating, average, count, error) {
     if (ratingTextEl) {
       if (error === 'unauthenticated') {
-        ratingTextEl.textContent = 'Connectez-vous pour noter ce film';
+        ratingTextEl.textContent = 'Connectez-vous pour noter ce film (non enregistré)';
       } else {
         ratingTextEl.textContent =
           userRating ? `Votre note : ${userRating}/5` : 'Votre note : —';
@@ -111,9 +116,11 @@
 
       const data = await submitRating(movieId, value);
       if (data.error) {
+        try { localStorage.setItem(lsKey(movieId), String(value)); } catch {}
         updateText(ratingTextEl, avgEl, null, data.average, data.count, data.error);
         return;
       }
+      try { localStorage.removeItem(lsKey(movieId)); } catch {}
       renderStars(container, data.user_rating || value);
       attachStarListeners(container, movieId, ratingTextEl, avgEl);
       updateText(ratingTextEl, avgEl, data.user_rating || value, data.average, data.count);
@@ -143,9 +150,11 @@
 
         const data = await submitRating(movieId, value);
         if (data.error) {
+          try { localStorage.setItem(lsKey(movieId), String(value)); } catch {}
           updateText(ratingTextEl, avgEl, null, data.average, data.count, data.error);
           return;
         }
+        try { localStorage.removeItem(lsKey(movieId)); } catch {}
         renderStars(container, data.user_rating || value);
         attachStarListeners(container, movieId, ratingTextEl, avgEl);
         updateText(ratingTextEl, avgEl, data.user_rating || value, data.average, data.count);
@@ -162,12 +171,12 @@
   }
 
   async function initOne(movieId) {
-    const container = document.getElementById(`stars-${movieId}`) ||
-                      document.querySelector(`#rating-container-${movieId} .stars`);
+    const container = document.getElementById(`stars-${movieId}`);
     const ratingTextEl = document.getElementById(`rating-text-${movieId}`);
     const avgEl = document.getElementById(`rating-avg-${movieId}`);
+    
     if (!container) {
-      console.warn('Stars container not found for movie:', movieId);
+      console.error(`❌ Container #stars-${movieId} NOT FOUND in DOM`);
       return;
     }
 
@@ -175,21 +184,33 @@
     container.setAttribute('tabindex', '0');
 
     const data = await fetchRating(movieId);
-    renderStars(container, data.user_rating || 0);
+    if (data && data.user_rating) {
+      try { localStorage.removeItem(lsKey(movieId)); } catch {}
+    }
+    
+    let initial = data.user_rating || 0;
+    if (!initial) {
+      try {
+        const v = localStorage.getItem(lsKey(movieId));
+        if (v) initial = Number(v);
+      } catch {}
+    }
+    
+    renderStars(container, initial);
     attachStarListeners(container, movieId, ratingTextEl, avgEl);
-    updateText(ratingTextEl, avgEl, data.user_rating, data.average, data.count);
+    updateText(ratingTextEl, avgEl, data.user_rating || initial, data.average, data.count);
     attachHandlers(container, movieId, ratingTextEl, avgEl);
   }
 
   function initAll() {
     const ratingBlocks = document.querySelectorAll('[id^="rating-container-"]');
-    if (!ratingBlocks.length) {
-      console.warn('No rating blocks found in DOM');
-      return;
-    }
+    console.log(`✅ Found ${ratingBlocks.length} rating blocks`);
     ratingBlocks.forEach((block) => {
       const movieId = block.dataset.movieId;
-      if (movieId) initOne(movieId);
+      if (movieId) {
+        console.log(`🎬 Initializing rating for movie ${movieId}`);
+        initOne(movieId);
+      }
     });
   }
 

@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="header">
         <div class="headerLeft">
-            <a href="/">
+            <a href="/movies">
                 <img class="header__icon" src="/static/images/RapidoCineLogo.png" alt="Rapido Logo" />
             </a>
         </div>
@@ -38,12 +38,14 @@
                     </div>
                 </div>
 
-                <!-- Bloc notation étoilée -->
-                <div class="movie-rating" id="rating-container-{{ movie.id }}" data-movie-id="{{ movie.id }}" style="margin: 1rem 0;">
-                  <div class="movie__heading" style="font-size: 1.4rem;">Votre note</div>
-                  <div class="stars" id="stars-{{ movie.id }}" role="radiogroup" aria-label="Noter ce film" tabindex="0"></div>
-                  <div class="rating-text" id="rating-text-{{ movie.id }}" aria-live="polite" style="margin-top: .5rem;">Votre note : —</div>
-                  <div class="rating-average" id="rating-avg-{{ movie.id }}" style="margin-top: .25rem; color: #aaa;">Note moyenne : —</div>
+                <!-- Bloc notation étoilée UNIQUE -->
+                <div id="rating-container-{{ movie.id }}" class="rating-section" data-movie-id="{{ movie.id }}" style="margin: 1rem 0;">
+                    <div style="margin-bottom: 1rem;">
+                      <div class="movie__heading" style="font-size: 1.4rem; margin-bottom: 0.5rem;">Noter ce film</div>
+                      <div id="stars-{{ movie.id }}" class="stars" style="display:flex; gap:8px; font-size:2rem; cursor: pointer; color: #f5c518;"></div>
+                      <div id="rating-text-{{ movie.id }}" style="margin-top:0.5rem; color:#aaa; font-size:0.9rem;">Votre note : —</div>
+                      <div id="rating-avg-{{ movie.id }}" style="margin-top:0.25rem; color:#888; font-size:0.85rem;">Note moyenne : —</div>
+                    </div>
                 </div>
 
                 <div class="movie__detailRightBottom">
@@ -131,10 +133,4 @@
 </script>
 <!-- Charger le script de notation -->
 <script src="/static/js/rating.js" defer></script>
-<!-- Optional inline fallback init (in case defer is ignored) -->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    if (window.__ratingInit) { try { window.__ratingInit(); } catch (e) {} }
-  });
-</script>
 {% endblock %}

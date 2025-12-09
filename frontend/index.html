@@ -472,18 +472,43 @@
             showLoading();
             try {
                 const response = await fetch(`${API_URL}/ratings/user/${currentUser.user_id}`);
-                const ratings = await response.json();
-                
-                const moviePromises = ratings.map(rating => 
-                    fetch(`${API_URL}/movies/${rating.movie_id}`).then(r => r.json())
-                );
-                const movies = await Promise.all(moviePromises);
-                
-                movies.forEach((movie, i) => {
-                    movie.user_rating = ratings[i].score;
+                let ratings = await response.json();
+
+                // Dédoublonner
+                const byMovie = new Map();
+                ratings.forEach(r => {
+                    const prev = byMovie.get(r.movie_id);
+                    if (!prev) { 
+                        byMovie.set(r.movie_id, r); 
+                        return; 
+                    }
+                    const newer = (r.updated_at && prev.updated_at) 
+                        ? (r.updated_at > prev.updated_at) 
+                        : ((r.id || 0) > (prev.id || 0));
+                    if (newer) byMovie.set(r.movie_id, r);
                 });
+                ratings = Array.from(byMovie.values());
+
+                // Récupérer les films
+                const movies = await Promise.all(
+                    ratings.map(r => fetch(`${API_URL}/movies/${r.movie_id}`).then(resp => resp.json()))
+                );
+
+                // Associer notes et TRIER STRICTEMENT
+                const moviesWithRating = movies.map((m, i) => ({ 
+                    ...m, 
+                    user_rating: parseInt(ratings[i].score) 
+                }));
                 
-                displayMovies(movies, 'Films que j\'ai notés');
+                // Tri décroissant : 5★ → 1★
+                moviesWithRating.sort((a, b) => {
+                    const scoreA = parseInt(a.user_rating) || 0;
+                    const scoreB = parseInt(b.user_rating) || 0;
+                    if (scoreB !== scoreA) return scoreB - scoreA;  // DESC
+                    return (a.title || '').localeCompare(b.title || '');
+                });
+
+                displayMovies(moviesWithRating, 'Films que j\'ai notés');
             } catch (error) {
                 showMessage('Erreur de chargement des notes', 'error');
             }
