@@ -79,9 +79,6 @@
     </div>
 </div>
 
-<!-- Add FontAwesome for heart icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
 <style>
 /* Force black background everywhere */
 body, html, .App, .poster, .movie__list, .list__cards {
@@ -114,102 +111,9 @@ body, html, .App, .poster, .movie__list, .list__cards {
     height: 100% !important;
 }
 
-/* Wishlist Heart Styles */
-.wishlist-heart {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 10;
-    background-color: rgba(0, 0, 0, 0.7);
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.wishlist-heart:hover {
-    background-color: rgba(255, 0, 0, 0.7);
-    transform: scale(1.1);
-}
-
-.wishlist-heart i {
-    font-size: 18px;
-    color: white;
-}
-
-.wishlist-heart.active i {
-    color: #ff0000;
-}
-
-.wishlist-heart.active {
-    background-color: rgba(255, 0, 0, 0.9);
-}
-
 /* Prevent heart from being hidden by overlay */
 .cards__overlay {
     z-index: 5; /* Lower than heart */
 }
 </style>
-
-<!-- JavaScript for Wishlist -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const hearts = document.querySelectorAll('.wishlist-heart');
-
-    hearts.forEach(heart => {
-        heart.addEventListener('click', async function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const movieId = parseInt(this.getAttribute('data-movie-id'));
-
-            try {
-                const resp = await fetch('/api/web/watchlist/toggle', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ movie_id: movieId })
-                });
-                if (resp.status === 401) {
-                    window.location.href = '/login';
-                    return;
-                }
-                if (!resp.ok) return;
-                const { active } = await resp.json();
-                this.classList.toggle('active', active);
-                this.innerHTML = `<i class="${active ? 'fas' : 'far'} fa-heart"></i>`;
-                showNotification(active ? 'Ajouté à la watchlist!' : 'Retiré de la watchlist!');
-            } catch (err) {
-                showNotification('Erreur réseau', 'error');
-            }
-        });
-    });
-
-    function showNotification(message) {
-        const notification = document.createElement('div');
-        notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed; top: 20px; right: 20px;
-            background-color: #ff0000; color: white;
-            padding: 10px 20px; border-radius: 5px;
-            z-index: 9999; font-weight: bold;
-            animation: fadeInOut 2s ease-in-out;
-        `;
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeInOut {
-                0% { opacity: 0; transform: translateY(-20px); }
-                10% { opacity: 1; transform: translateY(0); }
-                90% { opacity: 1; transform: translateY(0); }
-                100% { opacity: 0; transform: translateY(-20px); }
-            }
-        `;
-        document.head.appendChild(style);
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 2000);
-    }
-});
-</script>
 {% endblock %}

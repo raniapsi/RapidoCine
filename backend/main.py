@@ -96,7 +96,7 @@ async def home(request: Request, db: Session = Depends(get_db)):
         "movies": all_movies,
         "popular_movies": popular_movies,
         "featured_movies": featured_movies,
-        "watchlist_ids": watchlist_ids,  # <-- ajout
+        "watchlist_ids": watchlist_ids,
         "api_url": "/api"
     })
 
@@ -203,15 +203,20 @@ async def all_movies_page(request: Request, db: Session = Depends(get_db)):
         }
     
     all_movies = MovieService.get_all(db)
-    
-    # Assumons que vous avez un template 'movies.html' pour lister les films.
-    # Si ce n'est pas le cas, il faudra le créer.
+
+    # Ajouter watchlist_ids
+    watchlist_ids = []
+    if request.session.get("user_id"):
+        from backend.models import Watchlist
+        watchlist_ids = [row[0] for row in db.query(Watchlist.movie_id).filter(Watchlist.user_id == request.session["user_id"]).all()]
+
     return templates.TemplateResponse("movies.html", {
         "request": request, 
         "movies": all_movies,
         "list_title": "Tous les films",
         "title": "Films",
-        "current_user": current_user
+        "current_user": current_user,
+        "watchlist_ids": watchlist_ids
     })
 
 @app.get("/movies/{type}", response_class=HTMLResponse)
@@ -224,6 +229,12 @@ async def movie_list(request: Request, type: str, db: Session = Depends(get_db))
             "id": request.session["user_id"],
             "username": request.session["username"]
         }
+
+    # watchlist_ids pour toutes les variantes
+    watchlist_ids = []
+    if current_user:
+        from backend.models import Watchlist
+        watchlist_ids = [row[0] for row in db.query(Watchlist.movie_id).filter(Watchlist.user_id == current_user["id"]).all()]
 
     if type == "top_rated":
         # Exiger une connexion
@@ -269,7 +280,8 @@ async def movie_list(request: Request, type: str, db: Session = Depends(get_db))
             "movies": filtered_movies,
             "list_title": "Top Rated",
             "title": "Top Rated",
-            "current_user": current_user
+            "current_user": current_user,
+            "watchlist_ids": watchlist_ids
         })
 
     elif type == "watchlist":
@@ -292,7 +304,8 @@ async def movie_list(request: Request, type: str, db: Session = Depends(get_db))
             "movies": watchlist_movies,
             "list_title": "Ma Watchlist",
             "title": "Ma Watchlist",
-            "current_user": current_user
+            "current_user": current_user,
+            "watchlist_ids": watchlist_ids
         })
 
     # default
@@ -302,7 +315,8 @@ async def movie_list(request: Request, type: str, db: Session = Depends(get_db))
         "movies": all_movies,
         "list_title": "Films",
         "title": "Films",
-        "current_user": current_user
+        "current_user": current_user,
+        "watchlist_ids": watchlist_ids
     })
 
 @app.get("/top-rated", response_class=HTMLResponse)
@@ -378,6 +392,12 @@ async def movie_page(request: Request, movie_id: int, db: Session = Depends(get_
                  .order_by(Comment.created_at.desc())\
                  .all()
 
+    # watchlist_ids pour l'état du cœur sur la page détail
+    watchlist_ids = []
+    if current_user:
+        from backend.models import Watchlist
+        watchlist_ids = [row[0] for row in db.query(Watchlist.movie_id).filter(Watchlist.user_id == current_user["id"]).all()]
+
     # Fournir l'URL de l'API au frontend
     api_url = "/api"
 
@@ -386,7 +406,8 @@ async def movie_page(request: Request, movie_id: int, db: Session = Depends(get_
         "movie": movie,
         "comments": comments,
         "current_user": current_user,
-        "api_url": api_url
+        "api_url": api_url,
+        "watchlist_ids": watchlist_ids
     })
 
 @app.post("/movie/{movie_id}/comment")

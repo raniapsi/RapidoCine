@@ -26,7 +26,14 @@
             </div>
             <div class="movie__detailRight">
                 <div class="movie__detailRightTop">
-                    <div class="movie__name">{{ movie.title }}</div>
+                    <div class="movie__name">
+                        {{ movie.title }}
+                        <span class="wishlist-heart {% if watchlist_ids and (movie.id in watchlist_ids) %}active{% endif %}"
+                              data-movie-id="{{ movie.id }}"
+                              style="position: static; display:inline-flex; margin-left:10px; vertical-align: middle;">
+                            <i class="{% if watchlist_ids and (movie.id in watchlist_ids) %}fas{% else %}far{% endif %} fa-heart"></i>
+                        </span>
+                    </div>
                     <div class="movie__tagline">{{ movie.genres or '' }}</div>
                     <div class="movie__releaseDate">{{ movie.year }}</div>
                     <div class="movie__genres">

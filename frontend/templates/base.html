@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}RapidoCine - Movie Catalog{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/App.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/home.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/card.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/movieList.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/movie.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/App.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/card.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/movieList.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/movie.css') }}">
     <style>
         /* Force black background and remove any margins */
         body {
@@ -52,6 +52,28 @@
             font-weight: bold;
             margin-right: 15px;
         }
+
+        /* Wishlist Heart GLOBAL */
+        .cards { position: relative; } /* Pour positionner le coeur dans les cartes */
+        .wishlist-heart {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.7);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .wishlist-heart:hover { background-color: rgba(255, 0, 0, 0.7); transform: scale(1.1); }
+        .wishlist-heart i { font-size: 18px; color: white; }
+        .wishlist-heart.active i { color: #ff0000; }
+        .wishlist-heart.active { background-color: rgba(255, 0, 0, 0.9); }
     </style>
 </head>
 <body>
@@ -70,5 +92,31 @@
     
     <script src="{{ url_for('static', path='js/carousel.js') }}"></script>
     <script src="{{ url_for('static', path='js/script.js') }}"></script>
+    <script>
+      // Délégation globale pour tous les coeurs .wishlist-heart
+      document.addEventListener('click', async function(e) {
+        const el = e.target.closest('.wishlist-heart');
+        if (!el) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const movieId = parseInt(el.getAttribute('data-movie-id') || '0', 10);
+        if (!movieId) return;
+        try {
+          const resp = await fetch('/api/web/watchlist/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ movie_id: movieId })
+          });
+          if (resp.status === 401) { window.location.href = '/login'; return; }
+          if (!resp.ok) return;
+          const { active } = await resp.json();
+          el.classList.toggle('active', active);
+          el.innerHTML = `<i class="${active ? 'fas' : 'far'} fa-heart"></i>`;
+        } catch (err) {
+          // Optionnel: afficher une notification
+          console.error('Wishlist toggle failed', err);
+        }
+      });
+    </script>
 </body>
 </html>

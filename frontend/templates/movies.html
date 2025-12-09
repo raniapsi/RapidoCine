@@ -23,6 +23,11 @@
             {% for movie in movies %}
             <a href="/movie/{{ movie.id }}" style="textDecoration: none; color: white">
                 <div class="cards">
+                    <!-- Coeur wishlist -->
+                    <div class="wishlist-heart {% if watchlist_ids and (movie.id in watchlist_ids) %}active{% endif %}"
+                         data-movie-id="{{ movie.id }}">
+                        <i class="{% if watchlist_ids and (movie.id in watchlist_ids) %}fas{% else %}far{% endif %} fa-heart"></i>
+                    </div>
                     <img class="cards__img" src="{{ movie.poster_url or 'https://via.placeholder.com/300x450?text=No+Image' }}" alt="{{ movie.title }}" />
                     <div class="cards__overlay">
                         <div class="card__title">{{ movie.title }}</div>
