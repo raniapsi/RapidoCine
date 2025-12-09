@@ -19,12 +19,15 @@ pip install -r requirements.txt
 ### 3. Initialiser la base de données
 
 ```powershell
+# Retourner à la racine du projet
+cd ..
 python -m backend.init_db
 ```
 
 ### 4. Lancer le serveur
 
 ```powershell
+# Depuis la RACINE du projet (RapidoCine/)
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
