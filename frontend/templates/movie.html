@@ -52,6 +52,9 @@
                       <div id="stars-{{ movie.id }}" class="stars" style="display:flex; gap:8px; font-size:2rem; cursor: pointer; color: #f5c518;"></div>
                       <div id="rating-text-{{ movie.id }}" style="margin-top:0.5rem; color:#aaa; font-size:0.9rem;">Votre note : —</div>
                       <div id="rating-avg-{{ movie.id }}" style="margin-top:0.25rem; color:#888; font-size:0.85rem;">Note moyenne : —</div>
+                      <div id="rating-imdb-{{ movie.id }}" style="margin-top:0.25rem; color:#888; font-size:0.85rem;">
+                        Note IMDb (sur 5) : —
+                      </div>
                     </div>
                 </div>
 
@@ -137,6 +140,23 @@
 <!-- Expose API_URL to frontend -->
 <script>
   window.API_URL = "{{ api_url or 'http://localhost:8000/api' }}";
+  // Optionnel: rafraîchir la note IMDb côté client si l’API du film expose imdb_rating
+  // Cela n’affecte pas l’ordre, uniquement l’affichage.
+  (async function(){
+    const el = document.getElementById('rating-imdb-{{ movie.id }}');
+    if (!el) return;
+    // si déjà présent via template, on peut garder. Si vous voulez forcer la valeur depuis l’API:
+    try {
+      const res = await fetch(`${window.API_URL}/movies/{{ movie.id }}/imdb`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.imdb_rating_5 != null) {
+        el.textContent = `Note IMDb (sur 5) : ${data.imdb_rating_5}`;
+      } else {
+        el.textContent = 'Note IMDb (sur 5) : —';
+      }
+    } catch(e) { /* silencieux */ }
+  })();
 </script>
 <!-- Charger le script de notation -->
 <script src="/static/js/rating.js" defer></script>

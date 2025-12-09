@@ -14,6 +14,14 @@ from backend.services import MovieService, UserService
 from backend.services.rating_service import RatingService
 import random
 from pathlib import Path  # <-- ajout
+import httpx  # <-- ajout pour les requêtes HTTP
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Charger les variables d'environnement
+
+# DEBUG TEMPORAIRE
+print(f"🔑 OMDB_API_KEY loaded: {os.getenv('OMDB_API_KEY', 'NOT FOUND')}")
 
 # Créer les tables
 Base.metadata.create_all(bind=engine)
@@ -514,6 +522,99 @@ async def toggle_watchlist(request: Request, db: Session = Depends(get_db)):
         db.commit()
         return {"active": True}
 
-# DEV: removed unused demo payload that caused SyntaxError
-# End of file
+@app.get("/api/movies/{movie_id}/debug")
+async def api_debug_movie(movie_id: int, db: Session = Depends(get_db)):
+    """DEBUG: Affiche TOUS les attributs du film pour identifier le bon champ."""
+    m = MovieService.get_by_id(db, movie_id)
+    if not m:
+        raise HTTPException(status_code=404, detail="Movie not found")
+    
+    # Récupérer tous les attributs du modèle
+    all_attrs = {}
+    for key in dir(m):
+        if not key.startswith('_'):
+            try:
+                val = getattr(m, key, None)
+                if not callable(val):
+                    all_attrs[key] = str(val)[:100] if val is not None else None
+            except:
+                pass
+    
+    return {
+        "movie_id": m.id,
+        "title": m.title,
+        "all_attributes": all_attrs
+    }
+
+# Cache simple en mémoire pour les notes IMDb (évite de spammer l'API)
+IMDB_RATING_CACHE = {}
+
+async def fetch_imdb_rating(imdb_id: str) -> float:
+    """Récupère la note IMDb depuis l'API OMDB avec cache."""
+    if not imdb_id:
+        return None
+    
+    # Vérifier le cache
+    if imdb_id in IMDB_RATING_CACHE:
+        return IMDB_RATING_CACHE[imdb_id]
+    
+    # Récupérer la clé API depuis l'environnement
+    OMDB_API_KEY = os.getenv("OMDB_API_KEY")
+    
+    if not OMDB_API_KEY:
+        print("⚠️  OMDB_API_KEY manquante dans .env")
+        return None
+    
+    try:
+        url = f"http://www.omdbapi.com/?i={imdb_id}&apikey={OMDB_API_KEY}"
+        print(f"🔍 Fetching IMDb rating for {imdb_id} with key {OMDB_API_KEY[:4]}****")
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(url)
+            print(f"📡 Response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"📦 Response data: {data}")
+                
+                if data.get("Response") == "True" and "imdbRating" in data:
+                    rating = float(data["imdbRating"])
+                    print(f"✅ Rating found: {rating}")
+                    IMDB_RATING_CACHE[imdb_id] = rating
+                    return rating
+                else:
+                    print(f"❌ Invalid response: {data}")
+            else:
+                print(f"❌ HTTP Error {response.status_code}")
+    except Exception as e:
+        print(f"❌ Erreur OMDB pour {imdb_id}: {e}")
+    
+    return None
+
+@app.get("/api/movies/{movie_id}/imdb")
+async def api_get_imdb_rating(movie_id: int, db: Session = Depends(get_db)):
+    """Récupère la note IMDb d'un film (sur 10 et convertie sur 5)."""
+    movie = MovieService.get_by_id(db, movie_id)
+    if not movie:
+        raise HTTPException(status_code=404, detail="Movie not found")
+    
+    if not movie.imdb_id:
+        return {
+            "movie_id": movie_id,
+            "imdb_id": None,
+            "imdb_rating_10": None,
+            "imdb_rating_5": None,
+            "source": "no_imdb_id"
+        }
+    
+    rating_10 = await fetch_imdb_rating(movie.imdb_id)
+    rating_5 = round(rating_10 / 2, 1) if rating_10 else None
+    
+    return {
+        "movie_id": movie_id,
+        "imdb_id": movie.imdb_id,
+        "imdb_rating_10": rating_10,
+        "imdb_rating_5": rating_5,
+        "source": "omdb_live" if rating_10 else "unavailable"
+    }
 
