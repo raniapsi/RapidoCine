@@ -143,3 +143,30 @@
     align-items: center;
     justify-content: center;
 }
+
+.movie-rating .stars {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.movie-rating .star {
+    background: transparent;
+    border: none;
+    color: #f5c518;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    min-width: 32px; /* better touch target */
+    min-height: 32px;
+}
+
+.movie-rating .star.hover,
+.movie-rating .star.selected {
+    color: #f5c518;
+}
+
+.movie-rating .star:focus {
+    outline: 2px solid #f5c518;
+    outline-offset: 2px;
+}
