@@ -35,7 +35,7 @@
         <div class="header">
             <div class="headerLeft">
                 <a href="/">
-                    <img class="header__icon" src="/static/images/RapidoCineLogo.png" alt="Rapido Logo" />
+                    <img class="header__icon" src="{{ url_for('static', path='images/RapidoCineLogo.png') }}" alt="Rapido Logo" />
                 </a>
                 <a href="/movies" style="text-decoration: none"><span>Films</span></a>
                 <a href="/movies/top_rated" style="text-decoration: none"><span>Top Rated</span></a>
@@ -46,8 +46,10 @@
         <!-- Movie List Section -->
         <div class="movie__list" style="background-color: #000000;">
             <h2 class="list__title">FILMS</h2>
+            {% set listing = (popular_movies if popular_movies is defined and popular_movies else movies) %}
             <div class="list__cards">
-                {% for movie in popular_movies %}
+                {% if listing %}
+                {% for movie in listing %}
                 <a href="/movie/{{ movie.id }}" style="text-decoration: none; color: white; display: inline-block;">
                     <div class="cards">
                         <!-- Heart Icon for Wishlist -->
@@ -68,6 +70,9 @@
                     </div>
                 </a>
                 {% endfor %}
+                {% else %}
+                    <div style="color:#bbb; padding:20px;">Aucun film à afficher.</div>
+                {% endif %}
             </div>
         </div>
     </div>

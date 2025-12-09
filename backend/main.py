@@ -13,6 +13,7 @@ from backend.routers import users_router, movies_router, ratings_router, comment
 from backend.services import MovieService, UserService
 from backend.services.rating_service import RatingService
 import random
+from pathlib import Path  # <-- ajout
 
 # Créer les tables
 Base.metadata.create_all(bind=engine)
@@ -49,9 +50,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files for frontend
-app.mount("/static", StaticFiles(directory="./frontend/static"), name="static")
-templates = Jinja2Templates(directory="./frontend/templates")
+# Mount static files for frontend (chemins ABSOLUS, robustes)
+BASE_DIR = Path(__file__).resolve().parents[1]
+STATIC_DIR = BASE_DIR / "frontend" / "static"
+TEMPLATES_DIR = BASE_DIR / "frontend" / "templates"
+
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # Include API routers
 app.include_router(users_router, prefix="/api")
@@ -75,15 +80,15 @@ async def home(request: Request, db: Session = Depends(get_db)):
     
     all_movies = MovieService.get_all(db)
     
-    # Sélectionner un film populaire au hasard pour le carrousel
-    popular_movies = [m for m in all_movies if m.plot and m.poster_url] # Simple filter
-    featured_movie = random.choice(popular_movies) if popular_movies else None
+    # Sélectionner quelques films populaires avec poster pour le carrousel
+    popular_movies = [m for m in all_movies if m.plot and m.poster_url]
+    featured_movies = random.sample(popular_movies, min(len(popular_movies), 5)) if popular_movies else []
 
     return templates.TemplateResponse("index.html", {
         "request": request,
         "current_user": current_user,
         "movies": all_movies,
-        "featured_movie": featured_movie,
+        "featured_movies": featured_movies,  # <-- fourni au template
         "api_url": "/api"
     })
 
