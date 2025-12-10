@@ -226,57 +226,33 @@ uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 - **Swagger UI** : http://localhost:8000/api/docs
 - **ReDoc** : http://localhost:8000/api/redoc
 
-## 🎯 Fonctionnalités
-
-### ✅ Authentification
-- **Inscription** : Username, email, mot de passe
-- **Connexion** : Sessions sécurisées (cookies)
-- **Déconnexion** : Clear session
-- **Protection** : Redirection automatique si non connecté
-
-### ✅ Gestion des Films
-- **Import automatique** : 10 films depuis OMDb API au démarrage
-- **Affichage** : Carousel + grille responsive
-- **Détails film** : Poster, synopsis, genres, année
-- **Filtres** : Par genre (côté client)
-
-### ✅ Système de Notes (Ratings)
-- **UI interactive** : 5 étoiles cliquables
-- **Note utilisateur** : Sauvegardée en DB
-- **Note moyenne** : Calcul automatique
-- **Note IMDb** : Enrichissement depuis API
-- **Persistance** : LocalStorage fallback si erreur
-
-### ✅ Commentaires
-- **Publication** : Formulaire authentifié
-- **Affichage** : Ordre chronologique inversé
-- **Informations** : Auteur + date + contenu
-- **Protection** : Auth requise
-
-### ✅ Watchlist (Liste de films)
-- **Boutons cœur** : Toggle interactif
-- **États** : Actif/Inactif avec feedback visuel
-- **Persistance** : Base de données
-- **API dédiée** : `/api/web/watchlist/toggle`
-- **Page dédiée** : `/movies/watchlist`
-
-### ✅ Backend (API)
-- **Architecture 3-layers** : Models → Services → Routers
-- **Validation stricte** : Pydantic schemas
-- **ORM** : SQLAlchemy avec relations
-- **CRUD complet** : 5 entités (users, movies, ratings, comments, watchlist)
-- **Documentation auto** : Swagger UI + ReDoc
-- **Integration externe** : OMDb API
 
 ## ✅ Fonctionnalités essentielles
-- Authentification : username,nom,prénom,adresse mail, password
-- Connexion et deconnexion : username, password
-- Page d'accueil : affichage des films disponibles
-- Ajouter en favoris un film : lien avec la watchlist
-- Page film: Filtrer par genre (action,comédie etc...), aperçu sur les notes attribuées par l'ensemble des utilisateur imdb (via une API Imdb), aperçu de la description de chaque film.
-- Attribution de notes et visualisation du classement des films préférés de l'utilisateur : films classés par notes imdb et utilisateurs RapidoCiné, ceux qui n'ont pas de notes en dernier directement. Possibilité de visualiser une moyenne des notes attribuées au film entre tous les utilisateurs de RapidoCiné.
-- Publication de commentaires : possibilité de publier et de voir tous les commentaire entre les utilisateurs de RapidoCiné
 
+•⁠  ⁠Authentification
+Inscription : username, nom, prénom, adresse
+Connexion / Déconnexion : username, password
+Une fois connecté, la déconnexion est disponible sur toutes les pages.
+•⁠  ⁠Page d’accueil
+Affichage des films disponibles
+Ajout d’un film en favoris : lien avec la watchlist
+•⁠  ⁠Page film
+Filtrer par genre (action, comédie, etc.) 
+Aperçu des films classés par note IMDB
+Aperçu des notes attribuées par l’ensemble des utilisateurs IMDB (via une API IMDB) sur chaque film 
+•⁠  ⁠Page d’un film
+Aperçu de la description du film
+Attribution de notes
+Visualisation de trois classements :
+Celui de l’utilisateur
+Celui de tous les utilisateurs de RapidoCiné
+Celui d’IMDB
+Possibilité de publier des commentaires sur le film
+Consultation de tous les commentaires du film par les autres utilisateurs de RapidoCiné 
+•⁠  ⁠Page "Mon classement"
+Permet de voir les films classés selon les notes attribuées par l’utilisateur
+•⁠  ⁠Page watchlist
+Tous les films mis en favoris par l’utilisateur y sont affichés
 
 ## 🛠 Plan d'action
 
