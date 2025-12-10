@@ -2,7 +2,7 @@
 
 Application web moderne développée avec **FastAPI** (backend) et **HTML/CSS/JavaScript** (frontend), déployée avec Docker et orchestrée avec docker-compose.
 
-## 🏗️ Architecture
+## Architecture
 
 ### Structure du Projet
 ```
@@ -129,24 +129,24 @@ docker-compose logs -f db
 ##  Fonctionnalités
 
 ### Frontend (Interface Web)
-- ✅ Affichage des statistiques (nombre de films, cinémas, séances)
-- ✅ Onglets de navigation (Films, Cinémas, Séances)
-- ✅ Recherche de films par titre
-- ✅ Recherche de cinémas par ville
-- ✅ Recherche de séances par date
-- ✅ Affichage en grille responsive
-- ✅ Design moderne avec gradient et animations
+- Affichage des statistiques (nombre de films, cinémas, séances)
+- Onglets de navigation (Films, Cinémas, Séances)
+- Recherche de films par titre
+- Recherche de cinémas par ville
+- Recherche de séances par date
+- Affichage en grille responsive
+- Design moderne avec gradient et animations
 
 ### Backend (API)
-- ✅ Architecture en couches (Models, Schemas, Services, Routers)
-- ✅ Validation des données avec Pydantic
-- ✅ ORM SQLAlchemy pour PostgreSQL
-- ✅ CRUD complet pour toutes les entités
-- ✅ Relations entre tables (Foreign Keys)
-- ✅ Filtres et recherches avancées
-- ✅ Documentation automatique (OpenAPI/Swagger)
+- Architecture en couches (Models, Schemas, Services, Routers)
+- Validation des données avec Pydantic
+- ORM SQLAlchemy pour PostgreSQL
+- CRUD complet pour toutes les entités
+- Relations entre tables (Foreign Keys)
+- Filtres et recherches avancées
+- Documentation automatique (OpenAPI/Swagger)
 
-## ✅ Fonctionnalités essentielles
+## Fonctionnalités essentielles
 
 - Gestion CRUD complète pour Films, Cinémas et Séances (création, lecture, mise à jour, suppression).
 - Recherche et filtres avancés :
@@ -154,7 +154,7 @@ docker-compose logs -f db
   - Recherche par ville/adresse pour les cinémas.
   - Filtre par date, film ou cinéma pour les séances.
 
-## 🛠 Plan d'action
+## Plan d'action
 
 1. Préparation (30 min)
    - Créer le repo GitHub + structure initiale (backend/, frontend/, docker-compose.yml).
