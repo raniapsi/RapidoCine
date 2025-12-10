@@ -77,17 +77,6 @@
             </a>
             {% endif %}
         </div>
-        <div class="movie__heading">Production companies</div>
-        <div class="movie__production">
-            {% for company in movie.production_companies %}
-            {% if company.logo_path %}
-            <span class="productionCompanyImage">
-                <img class="movie__productionComapany" src="{{ company.logo_path }}" alt="{{ company.name }}" />
-                <span>{{ company.name }}</span>
-            </span>
-            {% endif %}
-            {% endfor %}
-        </div>
         
         <!-- Section Commentaires -->
         <div class="movie__comments" style="margin-top: 50px; padding: 30px; background-color: #1a1a1a; border-radius: 10px;">

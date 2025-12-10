@@ -105,7 +105,7 @@ async def home(request: Request, db: Session = Depends(get_db)):
     
     # Sélectionner quelques films populaires avec poster pour le carrousel
     popular_movies = [m for m in all_movies if m.plot and m.poster_url]
-    featured_movies = random.sample(popular_movies, min(len(popular_movies), 5)) if popular_movies else []
+    featured_movies = popular_movies
 
     # Préparer la wishlist de l'utilisateur connecté
     watchlist_ids = []
