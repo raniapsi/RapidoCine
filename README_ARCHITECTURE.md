@@ -8,10 +8,10 @@ Application web moderne développée avec **FastAPI** (backend) et **HTML/CSS/Ja
 ```
 RapidoCine/
 ├── backend/                 # API FastAPI
-│   ├── models/             # Modèles SQLAlchemy (Cinema, Film, Seance)
+│   ├── models/             # Modèles SQLAlchemy 
 │   ├── schemas/            # Schémas Pydantic pour validation
 │   ├── services/           # Logique métier
-│   ├── routers/            # Routes API (cinemas, films, seances)
+│   ├── routers/            # Routes API =
 │   ├── config.py           # Configuration de l'application
 │   ├── database.py         # Configuration base de données
 │   ├── main.py             # Point d'entrée FastAPI
@@ -48,15 +48,9 @@ RapidoCine/
    - Route `/api/` → Backend
 
 ### Modèle de Données
-
-#### Cinema
-- id, nom, adresse, ville, code_postal, latitude, longitude
-
 #### Film
 - id, titre, realisateur, genre, duree, date_sortie, synopsis, affiche_url
 
-#### Seance
-- id, film_id, cinema_id, horaire, salle, prix, places_disponibles
 
 ## 🚀 Installation et Démarrage
 
@@ -104,23 +98,6 @@ docker-compose logs -f db
 - `PUT /api/films/{id}` - Mettre à jour un film
 - `DELETE /api/films/{id}` - Supprimer un film
 
-### Cinémas
-- `GET /api/cinemas/` - Liste tous les cinémas
-- `GET /api/cinemas/{id}` - Détails d'un cinéma
-- `GET /api/cinemas/search?ville=xxx` - Recherche par ville
-- `POST /api/cinemas/` - Créer un cinéma
-- `PUT /api/cinemas/{id}` - Mettre à jour un cinéma
-- `DELETE /api/cinemas/{id}` - Supprimer un cinéma
-
-### Séances
-- `GET /api/seances/` - Liste toutes les séances
-- `GET /api/seances/{id}` - Détails d'une séance
-- `GET /api/seances/film/{film_id}` - Séances d'un film
-- `GET /api/seances/cinema/{cinema_id}` - Séances d'un cinéma
-- `GET /api/seances/date/{date}` - Séances d'une date (format: YYYY-MM-DD)
-- `POST /api/seances/` - Créer une séance
-- `PUT /api/seances/{id}` - Mettre à jour une séance
-- `DELETE /api/seances/{id}` - Supprimer une séance
 
 ### Documentation interactive
 - Swagger UI: http://localhost/api/docs
@@ -129,11 +106,9 @@ docker-compose logs -f db
 ## 🎯 Fonctionnalités
 
 ### Frontend (Interface Web)
-- ✅ Affichage des statistiques (nombre de films, cinémas, séances)
-- ✅ Onglets de navigation (Films, Cinémas, Séances)
+- ✅ Affichage des statistiques (nombre de films)
+- ✅ Onglets de navigation
 - ✅ Recherche de films par titre
-- ✅ Recherche de cinémas par ville
-- ✅ Recherche de séances par date
 - ✅ Affichage en grille responsive
 - ✅ Design moderne avec gradient et animations
 
@@ -148,11 +123,9 @@ docker-compose logs -f db
 
 ## ✅ Fonctionnalités essentielles
 
-- Gestion CRUD complète pour Films, Cinémas et Séances (création, lecture, mise à jour, suppression).
+- Gestion CRUD complète pour Films.
 - Recherche et filtres avancés :
-  - Recherche par titre, genre, réalisateur pour les films.
-  - Recherche par ville/adresse pour les cinémas.
-  - Filtre par date, film ou cinéma pour les séances.
+  - Recherche par titre, genre pour les films.
 
 ## 🛠 Plan d'action
 
@@ -175,9 +148,8 @@ docker-compose logs -f db
 ## 📦 Livrable
 
 1. Schéma de la base de données (description / diagramme rapide)
-   - Table: cinemas (id, nom, adresse, ville, code_postal, latitude, longitude)
    - Table: films (id, titre, realisateur, genre, duree, date_sortie, synopsis, affiche_url)
-   - Table: seances (id, film_id FK, cinema_id FK, horaire DATETIME, salle, prix NUMERIC, places_disponibles INT)
+
 
 2. Points de terminaison (extraits clés)
    - Films
@@ -186,11 +158,6 @@ docker-compose logs -f db
      - POST /api/films/ — créer
      - PUT /api/films/{id} — mettre à jour
      - DELETE /api/films/{id} — supprimer
-   - Cinémas
-     - GET /api/cinemas/, GET /api/cinemas/{id}, POST /api/cinemas/, ...
-   - Séances
-     - GET /api/seances/, GET /api/seances/{id}, GET /api/seances/film/{film_id}, POST /api/seances/, ...
-   - (Option) POST /api/reservations/ — créer réservation (si implémentée)
 
 3. Pages du frontend (ce à quoi ressemblera l'interface)
    - Page d'accueil (dashboard) : statistiques (nombre films, cinémas, séances), recherche globale.
