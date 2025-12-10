@@ -146,6 +146,79 @@ docker-compose logs -f db
 - ✅ Filtres et recherches avancées
 - ✅ Documentation automatique (OpenAPI/Swagger)
 
+## ✅ Fonctionnalités essentielles
+
+- Gestion CRUD complète pour Films, Cinémas et Séances (création, lecture, mise à jour, suppression).
+- Recherche et filtres avancés :
+  - Recherche par titre, genre, réalisateur pour les films.
+  - Recherche par ville/adresse pour les cinémas.
+  - Filtre par date, film ou cinéma pour les séances.
+
+## 🛠 Plan d'action
+
+1. Préparation (30 min)
+   - Créer le repo GitHub + structure initiale (backend/, frontend/, docker-compose.yml).
+   - Configurer .env et docker-compose.
+2. Backend (1h)
+   - Modèles SQLAlchemy + schémas Pydantic.
+   - Routes / services pour Films, Cinémas, Séances.
+   - Tests rapides des endpoints avec curl / Postman.
+3. Frontend (45 min)
+   - Pages HTML/CSS/JS : index, films, cinémas, séances, détail film.
+   - Connexion aux endpoints API.
+4. Intégration & Déploiement (30 min)
+   - docker-compose up --build, vérifier reverse-proxy Nginx.
+   - Ajustements UI/UX et corrections.
+5. Finalisation (15 min)
+   - Rédiger livrable et captures d'écran, push final sur GitHub.
+
+## 📦 Livrable
+
+1. Schéma de la base de données (description / diagramme rapide)
+   - Table: cinemas (id, nom, adresse, ville, code_postal, latitude, longitude)
+   - Table: films (id, titre, realisateur, genre, duree, date_sortie, synopsis, affiche_url)
+   - Table: seances (id, film_id FK, cinema_id FK, horaire DATETIME, salle, prix NUMERIC, places_disponibles INT)
+
+2. Points de terminaison (extraits clés)
+   - Films
+     - GET /api/films/ — lister
+     - GET /api/films/{id} — détail
+     - POST /api/films/ — créer
+     - PUT /api/films/{id} — mettre à jour
+     - DELETE /api/films/{id} — supprimer
+   - Cinémas
+     - GET /api/cinemas/, GET /api/cinemas/{id}, POST /api/cinemas/, ...
+   - Séances
+     - GET /api/seances/, GET /api/seances/{id}, GET /api/seances/film/{film_id}, POST /api/seances/, ...
+   - (Option) POST /api/reservations/ — créer réservation (si implémentée)
+
+3. Pages du frontend (ce à quoi ressemblera l'interface)
+   - Page d'accueil (dashboard) : statistiques (nombre films, cinémas, séances), recherche globale.
+   - Page Films : grille de cartes (affiche, titre, genre, bouton détail).
+   - Page Film Détail : synopsis.
+   - UI : design moderne, responsive, barre de navigation en haut, recherche visible.
+
+4. Fonctionnalités essentielles (récapitulatif)
+   - CRUD complet pour les 3 entités.
+   - Recherche & filtres.
+   - Visualisation des horaires et disponibilité.
+
+5. Plan d'action (tâches concrètes à rendre)
+   - Initialiser repo + README.
+   - Implémenter models/schemas et endpoints de base.
+   - Construire pages frontend principales (index, films, détails).
+   - Tester end-to-end localement et packager en Docker.
+   - Pusher sur GitHub et fournir lien.
+
+6. Création repo GitHub (instructions rapides)
+   - Créer repository public ou privé : rapidocine-groupX
+   - Ajouter README, .gitignore, licence si besoin.
+   - Push initial : backend/, frontend/, docker-compose.yml.
+   - Partager le lien en fin de séance.
+
+7. Nom de groupe
+   - RapidoCine
+
 ## 🔧 Configuration
 
 ### Variables d'environnement (.env)
@@ -155,12 +228,6 @@ APP_VERSION=1.0.0
 DEBUG=True
 DATABASE_URL=postgresql://rapidocine:rapidocine123@db:5432/rapidocine_db
 ```
-
-### Initialisation de la base de données
-Au premier démarrage, la base de données est automatiquement initialisée avec des données de test :
-- 3 cinémas à Paris
-- 4 films variés
-- 10 séances réparties sur plusieurs cinémas
 
 ## 🏆 Bonnes Pratiques Implémentées
 
