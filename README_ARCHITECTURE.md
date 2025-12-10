@@ -200,32 +200,6 @@ DEBUG=True
 DATABASE_URL=postgresql://rapidocine:rapidocine123@db:5432/rapidocine_db
 ```
 
-## 🏆 Bonnes Pratiques Implémentées
-
-### Architecture
-✅ **Separation of Concerns** - Models, Schemas, Services, Routers séparés
-✅ **Dependency Injection** - Utilisation de `Depends()` pour la session DB
-✅ **Configuration centralisée** - Fichier `config.py` avec Pydantic Settings
-✅ **Service Layer Pattern** - Logique métier dans les services
-
-### Code Quality
-✅ **Type Hints** - Typage Python complet
-✅ **Validation** - Schémas Pydantic pour entrées/sorties
-✅ **Error Handling** - HTTPException pour erreurs API
-✅ **Documentation** - Docstrings et documentation OpenAPI
-
-### DevOps
-✅ **Containerization** - Tous les services dockerisés
-✅ **Orchestration** - Docker Compose multi-services
-✅ **Reverse Proxy** - Nginx pour routage
-✅ **Health Checks** - Vérification de l'état de PostgreSQL
-✅ **Volumes** - Persistance des données
-
-### Sécurité
-✅ **Environment Variables** - Credentials dans .env
-✅ **CORS** - Configuration des origines autorisées
-✅ **.dockerignore** - Exclusion des fichiers sensibles
-
 ## 📊 Schéma de l'Infrastructure Réseau
 
 ```
