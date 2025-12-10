@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}{{ list_title }} Movies - RapidoCine{% endblock %}
+
+{% block content %}
+<div class="App">
+    <!-- Header -->
+    <div class="header">
+        <div class="headerLeft">
+            <a href="/">
+                <img class="header__icon" src="/static/images/RapidoCineLogo.png" alt="Rapido Logo" />
+            </a>
+            <a href="/movies" style="textDecoration: none"><span>Films</span></a>
+            <a href="/movies/top_rated" style="textDecoration: none"><span>Mon Classement</span></a>
+            <a href="/movies/watchlist" style="textDecoration: none"><span>Watchlist</span></a>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section" style="margin: 20px 40px;">
+        <h3>🎭 Filtrer par genre</h3>
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-genre="all">Tous</button>
+            <button class="filter-btn" data-genre="Action">Action</button>
+            <button class="filter-btn" data-genre="Comedy">Comédie</button>
+            <button class="filter-btn" data-genre="Drama">Drame</button>
+            <button class="filter-btn" data-genre="Thriller">Thriller</button>
+            <button class="filter-btn" data-genre="Horror">Horreur</button>
+            <button class="filter-btn" data-genre="Romance">Romance</button>
+            <button class="filter-btn" data-genre="Sci-Fi">Sci-Fi</button>
+            <button class="filter-btn" data-genre="Adventure">Aventure</button>
+            <button class="filter-btn" data-genre="Animation">Animation</button>
+            <button class="filter-btn" data-genre="Crime">Crime</button>
+            <button class="filter-btn" data-genre="Fantasy">Fantasy</button>
+        </div>
+    </div>
+
+    <!-- Movie List -->
+    <div class="movie__list">
+        <h2 class="list__title" id="list-title">{{ list_title.upper() }}</h2>
+        <div class="list__cards" id="movie-cards">
+            {% for movie in movies %}
+            <a href="/movie/{{ movie.id }}" style="textDecoration: none; color: white" data-genres="{{ movie.genre or movie.genres or '' }}">
+                <div class="cards">
+                    <!-- Coeur wishlist -->
+                    <div class="wishlist-heart {% if watchlist_ids and (movie.id in watchlist_ids) %}active{% endif %}"
+                         data-movie-id="{{ movie.id }}">
+                        <i class="{% if watchlist_ids and (movie.id in watchlist_ids) %}fas{% else %}far{% endif %} fa-heart"></i>
+                    </div>
+                    
+                    <!-- Badge note IMDb (sur 5) - UNIQUEMENT si show_imdb_rating est True -->
+                    {% if show_imdb_rating and movie.imdb_rating_5 %}
+                    <div style="position: absolute; top: 10px; left: 10px; background-color: #f5c518; color: black; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 14px; z-index: 10;">
+                        ⭐ {{ movie.imdb_rating_5 }}/5
+                    </div>
+                    {% endif %}
+                    
+                    <img class="cards__img" src="{{ movie.poster_url or 'https://via.placeholder.com/300x450?text=No+Image' }}" alt="{{ movie.title }}" />
+                    <div class="cards__overlay">
+                        <div class="card__title">{{ movie.title }}</div>
+                        <div class="card__runtime">
+                            {{ movie.year }}
+                            {% if show_imdb_rating and movie.imdb_rating_5 %}
+                            <span style="color: #f5c518; margin-left: 10px;">⭐ {{ movie.imdb_rating_5 }}/5</span>
+                            {% endif %}
+                        </div>
+                        <div class="card__description">
+                            {{ (movie.plot[:118] + '...') if movie.plot and movie.plot|length > 118 else (movie.plot or 'Aucune description') }}
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% else %}
+            <div style="color: white; text-align: center; width: 100%; padding: 40px;">
+                <h3>No movies found</h3>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

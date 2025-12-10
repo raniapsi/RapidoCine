@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}{{ movie.title }} - RapidoCine{% endblock %}
+
+{% block content %}
+<div class="App">
+    <!-- Header -->
+    <div class="header">
+        <div class="headerLeft">
+            <a href="/movies">
+                <img class="header__icon" src="/static/images/RapidoCineLogo.png" alt="Rapido Logo" />
+            </a>
+        </div>
+    </div>
+
+    <!-- Movie Detail - Exact IMDB design -->
+    <div class="movie">
+        <div class="movie__intro">
+            <img class="movie__backdrop" src="{{ movie.backdrop_url or 'https://via.placeholder.com/1280x720?text=No+Image' }}" alt="{{ movie.title }}" />
+        </div>
+        <div class="movie__detail">
+            <div class="movie__detailLeft">
+                <div class="movie__posterBox">
+                    <img class="movie__poster" src="{{ movie.poster_url or 'https://via.placeholder.com/300x450?text=No+Image' }}" alt="{{ movie.title }}" />
+                </div>
+            </div>
+            <div class="movie__detailRight">
+                <div class="movie__detailRightTop">
+                    <div class="movie__name">
+                        {{ movie.title }}
+                        <span class="wishlist-heart {% if watchlist_ids and (movie.id in watchlist_ids) %}active{% endif %}"
+                              data-movie-id="{{ movie.id }}"
+                              style="position: static; display:inline-flex; margin-left:10px; vertical-align: middle;">
+                            <i class="{% if watchlist_ids and (movie.id in watchlist_ids) %}fas{% else %}far{% endif %} fa-heart"></i>
+                        </span>
+                    </div>
+                    <div class="movie__tagline">{{ movie.genres or '' }}</div>
+                    <div class="movie__releaseDate">{{ movie.year }}</div>
+                    <div class="movie__genres">
+                        {% if movie.genres %}
+                            {% for genre in movie.genres.split(',') %}
+                                <span class="movie__genre">{{ genre.strip() }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Bloc notation étoilée UNIQUE -->
+                <div id="rating-container-{{ movie.id }}" class="rating-section" data-movie-id="{{ movie.id }}" style="margin: 1rem 0;">
+                    <div style="margin-bottom: 1rem;">
+                      <div class="movie__heading" style="font-size: 1.4rem; margin-bottom: 0.5rem;">Noter ce film</div>
+                      <div id="stars-{{ movie.id }}" class="stars" style="display:flex; gap:8px; font-size:2rem; cursor: pointer; color: #f5c518;"></div>
+                      <div id="rating-text-{{ movie.id }}" style="margin-top:0.5rem; color:#aaa; font-size:0.9rem;">Votre note : —</div>
+                      <div id="rating-avg-{{ movie.id }}" style="margin-top:0.25rem; color:#888; font-size:0.85rem;">Note moyenne : —</div>
+                      <div id="rating-imdb-{{ movie.id }}" style="margin-top:0.25rem; color:#888; font-size:0.85rem;">
+                        Note IMDb (sur 5) : —
+                      </div>
+                    </div>
+                </div>
+
+                <div class="movie__detailRightBottom">
+                    <div class="synopsisText">Synopsis</div>
+                    <div>{{ movie.plot or 'Aucune description disponible' }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="movie__links">
+            <div class="movie__heading">Useful Links</div>
+            {% if movie.homepage %}
+            <a href="{{ movie.homepage }}" target="_blank" style="textDecoration: none">
+                <p><span class="movie__homeButton movie__Button">Homepage <i class="newTab fas fa-external-link-alt"></i></span></p>
+            </a>
+            {% endif %}
+            {% if movie.imdb_id %}
+            <a href="https://www.imdb.com/title/{{ movie.imdb_id }}" target="_blank" style="textDecoration: none">
+                <p><span class="movie__imdbButton movie__Button">IMDb<i class="newTab fas fa-external-link-alt"></i></span></p>
+            </a>
+            {% endif %}
+        </div>
+        <div class="movie__heading">Production companies</div>
+        <div class="movie__production">
+            {% for company in movie.production_companies %}
+            {% if company.logo_path %}
+            <span class="productionCompanyImage">
+                <img class="movie__productionComapany" src="{{ company.logo_path }}" alt="{{ company.name }}" />
+                <span>{{ company.name }}</span>
+            </span>
+            {% endif %}
+            {% endfor %}
+        </div>
+        
+        <!-- Section Commentaires -->
+        <div class="movie__comments" style="margin-top: 50px; padding: 30px; background-color: #1a1a1a; border-radius: 10px;">
+            <div class="movie__heading">Commentaires</div>
+            
+            <!-- Formulaire d'ajout de commentaire -->
+            {% if current_user %}
+            <form method="POST" action="/movie/{{ movie.id }}/comment" style="margin-bottom: 30px;">
+                <textarea 
+                    name="content" 
+                    placeholder="Partagez votre avis sur ce film..." 
+                    required
+                    style="width: 100%; min-height: 100px; padding: 15px; background-color: #2a2a2a; color: white; border: 2px solid #444; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"
+                ></textarea>
+                <button 
+                    type="submit" 
+                    style="margin-top: 10px; padding: 10px 25px; background-color: #f5c518; color: black; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px;"
+                >
+                    Publier le commentaire
+                </button>
+            </form>
+            {% else %}
+            <p style="padding: 20px; background-color: #2a2a2a; border-radius: 8px; text-align: center; margin-bottom: 30px;">
+                <a href="/login" style="color: #f5c518; text-decoration: none;">Connectez-vous</a> pour laisser un commentaire
+            </p>
+            {% endif %}
+            
+            <!-- Liste des commentaires -->
+            <div class="comments__list">
+                {% if comments %}
+                    {% for comment in comments %}
+                    <div class="comment" style="padding: 20px; background-color: #2a2a2a; border-radius: 8px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span style="color: #f5c518; font-weight: bold;">{{ comment.user.username }}</span>
+                            <span style="color: #888; font-size: 12px;">{{ comment.created_at.strftime('%d/%m/%Y à %H:%M') }}</span>
+                        </div>
+                        <div style="color: #ddd; line-height: 1.6;">
+                            {{ comment.content }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="text-align: center; color: #888; padding: 30px;">Aucun commentaire pour le moment. Soyez le premier à donner votre avis !</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expose API_URL to frontend -->
+<script>
+  window.API_URL = "{{ api_url or 'http://localhost:8000/api' }}";
+  // Optionnel: rafraîchir la note IMDb côté client si l’API du film expose imdb_rating
+  // Cela n’affecte pas l’ordre, uniquement l’affichage.
+  (async function(){
+    const el = document.getElementById('rating-imdb-{{ movie.id }}');
+    if (!el) return;
+    // si déjà présent via template, on peut garder. Si vous voulez forcer la valeur depuis l’API:
+    try {
+      const res = await fetch(`${window.API_URL}/movies/{{ movie.id }}/imdb`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.imdb_rating_5 != null) {
+        el.textContent = `Note IMDb (sur 5) : ${data.imdb_rating_5}`;
+      } else {
+        el.textContent = 'Note IMDb (sur 5) : —';
+      }
+    } catch(e) { /* silencieux */ }
+  })();
+</script>
+<!-- Charger le script de notation -->
+<script src="/static/js/rating.js" defer></script>
+{% endblock %}

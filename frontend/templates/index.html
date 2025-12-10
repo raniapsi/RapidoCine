@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}RapidoCine - Discover Movies{% endblock %}
+
+{% block content %}
+<div class="App" style="background-color: #000000;">
+
+    <!-- Home Content -->
+    <div class="poster" style="background-color: #000000;">
+        <!-- Simple Carousel -->
+        <div class="carousel">
+            {% for movie in featured_movies %}
+            <div class="carousel-slide posterImage" {% if not loop.first %}style="display: none;"{% endif %}>
+                <a href="/movie/{{ movie.id }}" style="text-decoration: none; color: white; display: block; height: 100%;">
+                    <!-- Dégradé noir avec poster en arrière-plan -->
+                    <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); position: relative;">
+                        <!-- Poster en arrière-plan (à gauche) -->
+                        <img src="{{ movie.poster_url or 'https://via.placeholder.com/300x450?text=No+Image' }}" 
+                             alt="{{ movie.title }}" 
+                             style="position: absolute; left: 100px; top: 50%; transform: translateY(-50%); height: 450px; width: 300px; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.9); opacity: 0.4;" />
+                    </div>
+                    <div class="posterImage__overlay">
+                        <div class="posterImage__title">{{ movie.title }}</div>
+                        <div class="posterImage__runtime">
+                            {{ movie.year }}
+                        </div>
+                        <div class="posterImage__description">{{ movie.plot or 'Aucune description disponible' }}</div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="headerLeft">
+                <a href="/">
+                    <img class="header__icon" src="{{ url_for('static', path='images/RapidoCineLogo.png') }}" alt="Rapido Logo" />
+                </a>
+                <a href="/movies" style="text-decoration: none"><span>Films</span></a>
+                <a href="/movies/top_rated" style="text-decoration: none"><span>Mon Classement</span></a>
+                <a href="/movies/watchlist" style="text-decoration: none"><span>Watchlist</span></a>
+            </div>
+        </div>
+
+        <!-- Movie List Section -->
+        <div class="movie__list" style="background-color: #000000;">
+            <h2 class="list__title">FILMS</h2>
+            {% set listing = (popular_movies if popular_movies is defined and popular_movies else movies) %}
+            <div class="list__cards">
+                {% if listing %}
+                {% for movie in listing %}
+                <a href="/movie/{{ movie.id }}" style="text-decoration: none; color: white; display: inline-block;">
+                    <div class="cards">
+                        <!-- Heart Icon for Wishlist -->
+                        <div class="wishlist-heart {% if watchlist_ids and (movie.id in watchlist_ids) %}active{% endif %}" 
+                             data-movie-id="{{ movie.id }}">
+                            <i class="{% if watchlist_ids and (movie.id in watchlist_ids) %}fas{% else %}far{% endif %} fa-heart"></i>
+                        </div>
+                        
+                        <img class="cards__img" src="{{ movie.poster_url or 'https://via.placeholder.com/300x450?text=No+Image' }}" alt="{{ movie.title }}" />
+                        <div class="cards__overlay">
+                            <div class="card__title">{{ movie.title }}</div>
+                            <div class="card__runtime">
+                                {{ movie.year }}
+                            </div>
+                            <div class="card__description">
+                                {{ (movie.plot[:118] + '...') if movie.plot and movie.plot|length > 118 else (movie.plot or 'Aucune description') }}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+                {% else %}
+                    <div style="color:#bbb; padding:20px;">Aucun film à afficher.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Force black background everywhere */
+body, html, .App, .poster, .movie__list, .list__cards {
+    background-color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Ensure carousel works */
+.carousel {
+    position: relative;
+    height: 600px;
+    background-color: #000000;
+}
+
+.carousel-slide {
+    width: 100%;
+    height: 100%;
+}
+
+/* Make cards larger if needed */
+.cards {
+    position: relative; /* <-- pour positionner le coeur */
+    min-width: 220px !important;
+    height: 330px !important;
+}
+
+.cards__img {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Prevent heart from being hidden by overlay */
+.cards__overlay {
+    z-index: 5; /* Lower than heart */
+}
+</style>
+{% endblock %}

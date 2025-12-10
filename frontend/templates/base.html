@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RapidoCine - Movie Catalog{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/App.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/card.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/movieList.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/movie.css') }}">
+    <style>
+        /* Force black background and remove any margins */
+        body {
+            background-color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow-x: hidden;
+        }
+        html {
+            background-color: #000000;
+        }
+        
+        /* User menu styles */
+        .user-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .user-menu a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        
+        .user-menu a:hover {
+            color: #f0ad4e;
+        }
+        
+        .user-menu .username {
+            color: #f0ad4e;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        /* Wishlist Heart GLOBAL */
+        .cards { position: relative; } /* Pour positionner le coeur dans les cartes */
+        .wishlist-heart {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.7);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .wishlist-heart:hover { background-color: rgba(255, 0, 0, 0.7); transform: scale(1.1); }
+        .wishlist-heart i { font-size: 18px; color: white; }
+        .wishlist-heart.active i { color: #ff0000; }
+        .wishlist-heart.active { background-color: rgba(255, 0, 0, 0.9); }
+
+        /* Filter Section Styles */
+        .filter-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 20px 40px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .filter-section h3 {
+            color: #f0ad4e;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover {
+            background: rgba(240, 173, 78, 0.3);
+            border-color: #f0ad4e;
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background: #f0ad4e;
+            color: #000000;
+            border-color: #f0ad4e;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- User Menu -->
+    <div class="user-menu">
+        {% if current_user %}
+            <span class="username">👤 {{ current_user.username }}</span>
+            <a href="/logout">Déconnexion</a>
+        {% else %}
+            <a href="/login">Connexion</a>
+            <a href="/register">Inscription</a>
+        {% endif %}
+    </div>
+    
+    {% block content %}{% endblock %}
+    
+    <script src="{{ url_for('static', path='js/carousel.js') }}"></script>
+    <script src="{{ url_for('static', path='js/script.js') }}"></script>
+    <script>
+      // Délégation globale pour tous les coeurs .wishlist-heart
+      document.addEventListener('click', async function(e) {
+        const el = e.target.closest('.wishlist-heart');
+        if (!el) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const movieId = parseInt(el.getAttribute('data-movie-id') || '0', 10);
+        if (!movieId) return;
+        try {
+          const resp = await fetch('/api/web/watchlist/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ movie_id: movieId })
+          });
+          if (resp.status === 401) { window.location.href = '/login'; return; }
+          if (!resp.ok) return;
+          const { active } = await resp.json();
+          el.classList.toggle('active', active);
+          el.innerHTML = `<i class="${active ? 'fas' : 'far'} fa-heart"></i>`;
+        } catch (err) {
+          // Optionnel: afficher une notification
+          console.error('Wishlist toggle failed', err);
+        }
+      });
+
+      // Genre Filter Functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const movieCards = document.querySelectorAll('.cards');
+        const listTitle = document.getElementById('list-title');
+        const originalTitle = listTitle ? listTitle.textContent : '';
+
+        filterButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const selectedGenre = this.getAttribute('data-genre');
+            
+            // Update active button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter movies
+            let visibleCount = 0;
+            movieCards.forEach(card => {
+              const cardLink = card.closest('a');
+              if (!cardLink) return;
+              
+              const movieGenres = cardLink.getAttribute('data-genres') || '';
+              
+              if (selectedGenre === 'all') {
+                cardLink.style.display = '';
+                visibleCount++;
+              } else {
+                const genreList = movieGenres.toLowerCase().split(',').map(g => g.trim());
+                const shouldShow = genreList.some(g => g.includes(selectedGenre.toLowerCase()));
+                
+                if (shouldShow) {
+                  cardLink.style.display = '';
+                  visibleCount++;
+                } else {
+                  cardLink.style.display = 'none';
+                }
+              }
+            });
+            
+            // Update title
+            if (listTitle) {
+              if (selectedGenre === 'all') {
+                listTitle.textContent = originalTitle;
+              } else {
+                listTitle.textContent = `FILMS - ${selectedGenre.toUpperCase()} (${visibleCount})`;
+              }
+            }
+          });
+        });
+      });
+    </script>
+</body>
+</html>

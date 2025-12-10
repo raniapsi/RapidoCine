@@ -1,0 +1,53 @@
+# Environnement virtuel Python
+venv/
+env/
+ENV/
+.venv
+
+# Fichiers Python
+_pycache_/
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*__pycache__/
+*__pycache__/*
+
+# Variables d'environnement
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Base de données
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+venv/
+__pycache__/
