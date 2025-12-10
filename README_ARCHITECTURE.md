@@ -58,7 +58,7 @@ RapidoCine/
 #### Seance
 - id, film_id, cinema_id, horaire, salle, prix, places_disponibles
 
-## 🚀 Installation et Démarrage
+## Installation et Démarrage
 
 ### Prérequis
 - Docker Desktop installé
@@ -126,7 +126,7 @@ docker-compose logs -f db
 - Swagger UI: http://localhost/api/docs
 - ReDoc: http://localhost/api/redoc
 
-## 🎯 Fonctionnalités
+##  Fonctionnalités
 
 ### Frontend (Interface Web)
 - ✅ Affichage des statistiques (nombre de films, cinémas, séances)
@@ -172,7 +172,7 @@ docker-compose logs -f db
 5. Finalisation (15 min)
    - Rédiger livrable et captures d'écran, push final sur GitHub.
 
-## 📦 Livrable
+## Livrable
 
 1. Schéma de la base de données (description / diagramme rapide)
    - Table: cinemas (id, nom, adresse, ville, code_postal, latitude, longitude)
@@ -229,33 +229,33 @@ DEBUG=True
 DATABASE_URL=postgresql://rapidocine:rapidocine123@db:5432/rapidocine_db
 ```
 
-## 🏆 Bonnes Pratiques Implémentées
+## Bonnes Pratiques Implémentées
 
 ### Architecture
-✅ **Separation of Concerns** - Models, Schemas, Services, Routers séparés
-✅ **Dependency Injection** - Utilisation de `Depends()` pour la session DB
-✅ **Configuration centralisée** - Fichier `config.py` avec Pydantic Settings
-✅ **Service Layer Pattern** - Logique métier dans les services
+**Separation of Concerns** - Models, Schemas, Services, Routers séparés
+**Dependency Injection** - Utilisation de `Depends()` pour la session DB
+**Configuration centralisée** - Fichier `config.py` avec Pydantic Settings
+**Service Layer Pattern** - Logique métier dans les services
 
 ### Code Quality
-✅ **Type Hints** - Typage Python complet
-✅ **Validation** - Schémas Pydantic pour entrées/sorties
+**Type Hints** - Typage Python complet
+**Validation** - Schémas Pydantic pour entrées/sorties
 ✅ **Error Handling** - HTTPException pour erreurs API
 ✅ **Documentation** - Docstrings et documentation OpenAPI
 
 ### DevOps
-✅ **Containerization** - Tous les services dockerisés
-✅ **Orchestration** - Docker Compose multi-services
-✅ **Reverse Proxy** - Nginx pour routage
-✅ **Health Checks** - Vérification de l'état de PostgreSQL
-✅ **Volumes** - Persistance des données
+**Containerization** - Tous les services dockerisés
+**Orchestration** - Docker Compose multi-services
+**Reverse Proxy** - Nginx pour routage
+**Health Checks** - Vérification de l'état de PostgreSQL
+**Volumes** - Persistance des données
 
 ### Sécurité
-✅ **Environment Variables** - Credentials dans .env
-✅ **CORS** - Configuration des origines autorisées
-✅ **.dockerignore** - Exclusion des fichiers sensibles
+**Environment Variables** - Credentials dans .env
+**CORS** - Configuration des origines autorisées
+**.dockerignore** - Exclusion des fichiers sensibles
 
-## 📊 Schéma de l'Infrastructure Réseau
+## Schéma de l'Infrastructure Réseau
 
 ```
                     Internet
@@ -281,7 +281,7 @@ DATABASE_URL=postgresql://rapidocine:rapidocine123@db:5432/rapidocine_db
               [rapidocine_network]
 ```
 
-## 🎨 Technologies Utilisées
+## Technologies Utilisées
 
 - **Backend**: FastAPI 0.109, Uvicorn, SQLAlchemy 2.0, Pydantic 2.5
 - **Base de données**: PostgreSQL 15
@@ -291,7 +291,7 @@ DATABASE_URL=postgresql://rapidocine:rapidocine123@db:5432/rapidocine_db
 - **ORM**: SQLAlchemy avec support async
 - **Validation**: Pydantic pour schémas et configuration
 
-## 📝 Développement Local (Sans Docker)
+## Développement Local (Sans Docker)
 
 ```powershell
 # Créer un environnement virtuel
@@ -312,7 +312,7 @@ python -m backend.init_db
 uvicorn backend.main:app --reload
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### La base de données ne démarre pas
 ```powershell
