@@ -122,10 +122,14 @@ docker-compose logs -f db
 - ✅ Documentation automatique (OpenAPI/Swagger)
 
 ## ✅ Fonctionnalités essentielles
+- Authentification : username,nom,prénom,adresse mail, password
+- Connexion et deconnexion : username, password
+- Page d'accueil : affichage des films disponibles
+- Ajouter en favoris un film : lien avec la watchlist
+- Page film: Filtrer par genre (action,comédie etc...), aperçu sur les notes attribuées par l'ensemble des utilisateur imdb (via une API Imdb), aperçu de la description de chaque film.
+- Attribution de notes et visualisation du classement des films préférés de l'utilisateur : films classés par notes imdb et utilisateurs RapidoCiné, ceux qui n'ont pas de notes en dernier directement. Possibilité de visualiser une moyenne des notes attribuées au film entre tous les utilisateurs de RapidoCiné.
+- Publication de commentaires : possibilité de publier et de voir tous les commentaire entre les utilisateurs de RapidoCiné
 
-- Gestion CRUD complète pour Films.
-- Recherche et filtres avancés :
-  - Recherche par titre, genre pour les films.
 
 ## 🛠 Plan d'action
 
