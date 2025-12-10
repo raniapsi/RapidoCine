@@ -30,7 +30,7 @@ app = FastAPI(
 # Configuration Sessions (AVANT CORS pour priorité)
 app.add_middleware(
     SessionMiddleware,
-    secret_key="votre-cle-secrete-changez-moi-en-production",  # TODO: Mettre dans .env
+    secret_key="votre-cle-secrete-changez-moi-en-production",
     session_cookie="rapidocine_session",
     max_age=86400,  # 24 heures
     same_site="lax",
