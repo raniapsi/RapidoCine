@@ -240,8 +240,8 @@ DATABASE_URL=postgresql://rapidocine:rapidocine123@db:5432/rapidocine_db
 ### Code Quality
 **Type Hints** - Typage Python complet
 **Validation** - Schémas Pydantic pour entrées/sorties
-✅ **Error Handling** - HTTPException pour erreurs API
-✅ **Documentation** - Docstrings et documentation OpenAPI
+**Error Handling** - HTTPException pour erreurs API
+**Documentation** - Docstrings et documentation OpenAPI
 
 ### DevOps
 **Containerization** - Tous les services dockerisés
