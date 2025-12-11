@@ -221,6 +221,65 @@ class MovieFetcherService:
         except Exception as e:
             print(f"Erreur recherche: {e}")
             return []
+    
+    # Ajouter dans la classe existante
+
+    def search_movies_autocomplete(self, query: str) -> List[Dict]:
+        """
+        Recherche rapide pour auto-complétion
+        Retourne les résultats formatés pour le frontend
+        """
+        try:
+            url = "http://www.omdbapi.com/"
+            params = {
+                "apikey": self.omdb_key,
+                "s": query,
+                "type": "movie",
+                "page": 1
+            }
+            
+            response = requests.get(url, params=params, timeout=5)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get("Response") == "True" and data.get("Search"):
+                    results = []
+                    for movie in data["Search"]:
+                        # Formater les résultats pour l'auto-complétion
+                        results.append({
+                            "imdb_id": movie.get("imdbID"),
+                            "title": movie.get("Title"),
+                            "year": movie.get("Year"),
+                            "type": movie.get("Type"),
+                            "poster": movie.get("Poster") if movie.get("Poster") != "N/A" else None
+                        })
+                    return results
+            return []
+            
+        except Exception as e:
+            print(f"⚠️ Erreur recherche auto-complétion: {e}")
+            return []
+
+    def fetch_and_create_movie(self, imdb_id: str) -> Optional[Dict]:
+        """
+        Récupère un film complet et le formate pour la création
+        """
+        movie_data = self.fetch_movie_by_imdb_id(imdb_id)
+        
+        if not movie_data:
+            return None
+        
+        # Formater pour le schéma MovieCreate
+        return {
+            "imdb_id": movie_data["imdb_id"],
+            "title": movie_data["title"],
+            "year": movie_data.get("year"),
+            "poster_url": movie_data.get("poster_url"),
+            "backdrop_url": movie_data.get("backdrop_url"),
+            "plot": movie_data.get("plot", ""),
+            "genres": movie_data.get("genres", "")
+        }
 
 
 # Instance globale pour faciliter l'utilisation
