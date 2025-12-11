@@ -36,7 +36,7 @@
                         <div class="posterImage__runtime">
                             {{ movie.year }}
                         </div>
-                        <div class="posterImage__description">{{ movie.plot or 'Aucune description disponible' }}</div>
+                        <div class="posterImage__description">{% if movie.plot %}{% set words = movie.plot.split() %}{% if words|length > 50 %}{{ words[:70]|join(' ') }} ...{% else %}{{ movie.plot }}{% endif %}{% else %}Aucune description disponible{% endif %}</div>
                     </div>
                 </a>
             </div>
