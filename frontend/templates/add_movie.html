@@ -5,25 +5,19 @@
 {% block content %}
 <div class="App" style="background-color: #000000; min-height: 100vh; padding: 2rem 0;">
     <!-- Header Navigation -->
-    <div class="header" style="padding: 1rem 2rem;">
-        <div class="headerLeft">
-            <a href="/">
-                <img class="header__icon" src="/static/images/RapidoCineLogo.png" alt="Rapido Logo" />
-            </a>
-            <a href="/movies" style="text-decoration: none; margin-left: 2rem;">
-                <span style="color: white; font-weight: bold;">Films</span>
-            </a>
-            <a href="/movies/top_rated" style="text-decoration: none; margin-left: 1.5rem;">
-                <span style="color: white; font-weight: bold;">Mon Classement</span>
-            </a>
-            <a href="/movies/watchlist" style="text-decoration: none; margin-left: 1.5rem;">
-                <span style="color: white; font-weight: bold;">Watchlist</span>
-            </a>
-            <a href="/add-movie" style="text-decoration: none; margin-left: 1.5rem;">
-                <span style="color: #f5c518; font-weight: bold; border-bottom: 2px solid #f5c518;">➕ Ajouter un film</span>
-            </a>
+        <!-- Header -->
+        <div class="header">
+            <div class="headerLeft">
+                <a href="/">
+                    <img class="header__icon" src="{{ url_for('static', path='images/RapidoCineLogo.png') }}" alt="Rapido Logo" />
+                </a>
+                <a href="/movies" style="text-decoration: none"><span>Films</span></a>
+                <a href="/movies/top_rated" style="text-decoration: none"><span>Mon Classement</span></a>
+                <a href="/movies/watchlist" style="text-decoration: none"><span>Watchlist</span></a>
+                <a href="/add-movie" style="text-decoration: none"><span>➕ Ajouter un film</span>
+                </a>
+            </div>
         </div>
-    </div>
 
     <!-- Main Content -->
     <div class="container" style="max-width: 800px; margin: 0 auto; padding: 0 1rem;">
@@ -63,7 +57,7 @@
                     color: #888;
                     pointer-events: none;
                 ">
-                    🔍
+
                 </div>
             </div>
             
@@ -96,7 +90,7 @@
             margin-bottom: 3rem;
             border-left: 4px solid #f5c518;
         ">
-            <h3 style="color: #f5c518; margin-bottom: 1rem;">📋 Comment ça marche :</h3>
+            <h3 style="color: #f5c518; margin-bottom: 1rem;">Comment ça marche :</h3>
             <ol style="color: #ddd; line-height: 1.6; margin: 0; padding-left: 1.5rem;">
                 <li>Commencez à taper le titre d'un film dans la barre de recherche ci-dessus</li>
                 <li>Les suggestions apparaissent automatiquement après 2 caractères</li>
@@ -232,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (results[0]?.loading) {
             resultsDiv.innerHTML = `
                 <div style="padding: 1.5rem; text-align: center; color: #888;">
-                    🔍 Recherche en cours...
+                     Recherche en cours...
                 </div>
             `;
             resultsDiv.style.display = 'block';
