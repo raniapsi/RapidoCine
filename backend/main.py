@@ -772,4 +772,62 @@ async def test_add_page():
         </body>
     </html>
     """)
+    
+@app.get("/api/search/movies")
+async def search_movies_api(
+    query: str = "", 
+    db: Session = Depends(get_db)
+):
+    """API pour rechercher des films dans la base de données"""
+    print(f"🔍 SEARCH API called with query: '{query}'")
+    
+    from backend.services.movie_service import MovieService
+    results = MovieService.search_by_title(db, query)
+    
+    # Convert SQLAlchemy objects to dictionaries
+    movies_data = []
+    for movie in results[:20]:
+        movies_data.append({
+            "id": movie.id,
+            "title": movie.title,
+            "year": movie.year,
+            "poster_url": movie.poster_url,
+            "imdb_id": movie.imdb_id,
+            "plot": movie.plot,
+            "genres": movie.genres
+        })
+    
+    print(f"📊 Returning {len(movies_data)} movies for query: '{query}'")
+    return movies_data
+
+@app.get("/search")
+async def search_page(request: Request, query: str = "", db: Session = Depends(get_db)):
+    """Page de résultats de recherche"""
+    current_user = None
+    if request.session.get("user_id"):
+        current_user = {
+            "id": request.session["user_id"],
+            "username": request.session["username"]
+        }
+    
+    results = []
+    if query:
+        from backend.services.movie_service import MovieService
+        results = MovieService.search_by_title(db, query)
+    
+    watchlist_ids = []
+    if current_user:
+        from backend.models import Watchlist
+        watchlist_ids = [row[0] for row in db.query(Watchlist.movie_id).filter(Watchlist.user_id == current_user["id"]).all()]
+    
+    return templates.TemplateResponse("movies.html", {
+        "request": request,
+        "movies": results,
+        "list_title": f"Résultats pour: '{query}'",
+        "title": "Recherche",
+        "current_user": current_user,
+        "watchlist_ids": watchlist_ids,
+        "show_imdb_rating": True,
+        "search_query": query
+    })
 

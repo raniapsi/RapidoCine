@@ -30,6 +30,119 @@ a > span:hover {
   cursor: pointer;
 }
 
+/* Search Bar Styles */
+.header-search-container {
+  margin-left: auto;
+  position: relative;
+  width: 300px;
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  padding-left: 2.5rem;
+  background: #1a1a1a;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.search-input:focus {
+  border-color: #f5c518;
+  box-shadow: 0 0 0 2px rgba(245, 197, 24, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  pointer-events: none;
+}
+
+.search-results-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1001;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.search-result-item {
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid #333;
+  transition: background 0.2s;
+}
+
+.search-result-item:hover {
+  background: #2a2a2a;
+}
+
+.search-result-poster {
+  width: 40px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.search-result-poster-placeholder {
+  width: 40px;
+  height: 60px;
+  background: #2a2a2a;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.search-result-info {
+  flex: 1;
+}
+
+.search-result-title {
+  font-weight: bold;
+  color: white;
+  font-size: 0.95rem;
+}
+
+.search-result-year {
+  color: #f5c518;
+  font-size: 0.85rem;
+}
+
+.search-loading,
+.search-no-results,
+.search-error {
+  padding: 1rem;
+  text-align: center;
+  color: #888;
+}
+
+.search-error {
+  color: #ff6b6b;
+}
+
 /* Larger on bigger screens */
 @media (min-width: 768px) {
   .header__icon {
@@ -40,5 +153,37 @@ a > span:hover {
 @media (min-width: 1024px) {
   .header__icon {
     width: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    margin: 0 1rem;
+    padding: 0.5rem 0;
+  }
+  
+  .header-search-container {
+    width: 200px;
+  }
+  
+  .header-link {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .header {
+    flex-wrap: wrap;
+  }
+  
+  .header-search-container {
+    width: 100%;
+    order: 3;
+    margin-top: 0.5rem;
+    margin-left: 0;
+  }
+  
+  .header-user-section {
+    margin-left: auto;
   }
 }

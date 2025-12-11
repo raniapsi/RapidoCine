@@ -141,7 +141,7 @@
     <script src="{{ url_for('static', path='js/carousel.js') }}"></script>
     <script src="{{ url_for('static', path='js/script.js') }}"></script>
     <script>
-      // Délégation globale pour tous les coeurs .wishlist-heart
+      // Wishlist toggle functionality
       document.addEventListener('click', async function(e) {
         const el = e.target.closest('.wishlist-heart');
         if (!el) return;
@@ -161,7 +161,6 @@
           el.classList.toggle('active', active);
           el.innerHTML = `<i class="${active ? 'fas' : 'far'} fa-heart"></i>`;
         } catch (err) {
-          // Optionnel: afficher une notification
           console.error('Wishlist toggle failed', err);
         }
       });
@@ -215,6 +214,165 @@
             }
           });
         });
+      });
+
+      // Search functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('header-search-input');
+        const resultsDiv = document.getElementById('header-search-results');
+        
+        if (!searchInput || !resultsDiv) {
+          console.log('Search elements not found on this page');
+          return;
+        }
+        
+        console.log('Initializing search functionality...');
+        
+        let debounceTimer;
+        
+        searchInput.addEventListener('input', function(e) {
+          clearTimeout(debounceTimer);
+          const query = e.target.value.trim();
+          
+          if (query.length < 2) {
+            resultsDiv.style.display = 'none';
+            return;
+          }
+          
+          // Show loading
+          resultsDiv.innerHTML = `
+            <div style="padding: 1rem; text-align: center; color: #888;">
+              🔍 Recherche en cours...
+            </div>
+          `;
+          resultsDiv.style.display = 'block';
+          
+          debounceTimer = setTimeout(() => {
+            searchMovies(query);
+          }, 300);
+        });
+        
+        // Close results when clicking outside
+        document.addEventListener('click', function(e) {
+          if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+            resultsDiv.style.display = 'none';
+          }
+        });
+        
+        // Keyboard navigation
+        searchInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') {
+            resultsDiv.style.display = 'none';
+            searchInput.blur();
+          } else if (e.key === 'Enter') {
+            const query = searchInput.value.trim();
+            if (query.length >= 2) {
+              window.location.href = `/search?query=${encodeURIComponent(query)}`;
+            }
+          }
+        });
+        
+        async function searchMovies(query) {
+          console.log(`Searching for: "${query}"`);
+          
+          try {
+            const response = await fetch(`/api/search/movies?query=${encodeURIComponent(query)}`);
+            console.log(`Response status: ${response.status}`);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log(`Received ${data.length} results`);
+            
+            if (data && data.length > 0) {
+              showResults(data);
+            } else {
+              showNoResults(query);
+            }
+          } catch (error) {
+            console.error('Search error:', error);
+            showError(error.message);
+          }
+        }
+        
+        function showResults(movies) {
+          if (!movies || movies.length === 0) {
+            showNoResults('');
+            return;
+          }
+          
+          const html = movies.map(movie => {
+            return `
+              <div class="search-result-item" 
+                   onclick="window.location.href='/movie/${movie.id}'"
+                   style="
+                      padding: 0.8rem 1rem;
+                      cursor: pointer;
+                      display: flex;
+                      align-items: center;
+                      gap: 1rem;
+                      border-bottom: 1px solid #333;
+                      transition: background 0.2s;
+                   "
+                   onmouseover="this.style.background='#2a2a2a'"
+                   onmouseout="this.style.background='transparent'">
+                ${movie.poster_url ? `
+                <img src="${movie.poster_url}" 
+                     alt="${movie.title}"
+                     style="width: 40px; height: 60px; object-fit: cover; border-radius: 4px;">
+                ` : `
+                <div style="width: 40px; height: 60px; background: #2a2a2a; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #666;">
+                  🎬
+                </div>
+                `}
+                <div style="flex: 1;">
+                  <div style="font-weight: bold; color: white; font-size: 0.95rem;">${movie.title}</div>
+                  <div style="color: #f5c518; font-size: 0.85rem;">${movie.year || 'N/A'}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+          
+          resultsDiv.innerHTML = html;
+          resultsDiv.style.display = 'block';
+        }
+        
+        function showNoResults(query) {
+          resultsDiv.innerHTML = `
+            <div style="padding: 1.5rem; text-align: center; color: #888;">
+              Aucun résultat pour "${query}"
+            </div>
+          `;
+          resultsDiv.style.display = 'block';
+        }
+        
+        function showError(message) {
+          resultsDiv.innerHTML = `
+            <div style="padding: 1.5rem; text-align: center; color: #ff6b6b;">
+              ❌ Erreur lors de la recherche: ${message}
+            </div>
+          `;
+          resultsDiv.style.display = 'block';
+        }
+        
+        // Test the API when page loads
+        console.log('Testing search API with "matrix"...');
+        fetch('/api/movies/search?query=matrix')
+          .then(response => {
+            console.log('Test response status:', response.status);
+            if (!response.ok) {
+              throw new Error(`Test failed: ${response.status} ${response.statusText}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('Test search successful, found', data.length, 'movies');
+          })
+          .catch(error => {
+            console.error('Test search failed:', error);
+          });
       });
     </script>
 </body>

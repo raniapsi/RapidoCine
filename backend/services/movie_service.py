@@ -49,7 +49,15 @@ class MovieService:
     
     @staticmethod
     def search_by_title(db: Session, title: str) -> List[Movie]:
-        return db.query(Movie).filter(Movie.title.ilike(f"%{title}%")).all()
+        """Search movies by title (case-insensitive)"""
+        print(f"🔍 Searching movies with title containing: '{title}'")
+        if not title or title.strip() == "":
+            return []
+        results = db.query(Movie).filter(Movie.title.ilike(f"%{title}%")).all()
+        print(f"📊 Found {len(results)} movies for '{title}'")
+        for movie in results[:5]:  # Print first 5 results
+            print(f"   - {movie.title} (ID: {movie.id}, Year: {movie.year})")
+        return results
     
     @staticmethod
     def filter_by_year(db: Session, year: int) -> List[Movie]:
@@ -107,3 +115,4 @@ class MovieService:
         from backend.services.movie_fetcher import MovieFetcherService
         fetcher = MovieFetcherService()
         return fetcher.search_movies_autocomplete(query)
+    
