@@ -1,6 +1,12 @@
-# RapidoCine - Mode Développement (Sans Docker)
+# RapidoCine - Mode Développement
 
-## Installation
+## Avec Docker 
+
+### Prérequis
+- Docker Desktop installé et démarré
+- Git
+
+### Installation complète (première fois)
 
 ### 1. Créer un environnement virtuel
 
@@ -55,3 +61,4 @@ const API_URL = 'http://localhost:8000/api';
 ## Structure de la base de données
 
 En mode développement, on utilise **SQLite** (fichier `rapidocine.db`) au lieu de PostgreSQL.
+
