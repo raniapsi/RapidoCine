@@ -2,23 +2,22 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Installation des dépendances système
+# Dépendances système
 RUN apt-get update && apt-get install -y \
     gcc \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Copier les fichiers de requirements
-COPY requirements.txt .
+# Copier requirements depuis backend/
+COPY backend/requirements.txt /app/requirements.txt
 
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le code de l'application
-COPY . .
+# Copier tout le code (backend + frontend)
+COPY backend /app/backend
+COPY frontend /app/frontend
 
-# Exposer le port
 EXPOSE 8000
 
-# Commande de démarrage
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
