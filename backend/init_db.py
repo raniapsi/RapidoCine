@@ -63,6 +63,61 @@ def init_db():
             "tt1375666",  # Inception
             "tt0137523",  # Fight Club
             "tt0167260",  # The Lord of the Rings: The Return of the King
+            "tt0108052",
+            "tt0114369",  # Se7en
+            "tt0099685",  # Goodfellas
+            "tt0102926",  # The Silence of the Lambs
+            "tt0088763",  # Back to the Future
+            "tt0118799",  # Life Is Beautiful
+            "tt0120815",  # Saving Private Ryan
+            "tt0076759",  # Star Wars: Episode IV - A New Hope
+            "tt0103064",  # Terminator 2: Judgment Day
+            "tt0082971",  # Raiders of the Lost Ark
+            "tt0095765",  # Cinema Paradiso
+            "tt0047478",  # Seven Samurai
+            "tt0038650",  # It's a Wonderful Life
+            "tt0056058",  # Harakiri
+            "tt0110413",  # Léon: The Professional
+            "tt0021749",  # City Lights
+            "tt0095327",  # Grave of the Fireflies
+            "tt0081505",  # The Shining
+            "tt0054215",  # Psycho
+            "tt0047396",  # Rear Window
+            "tt0078748",  # Alien
+            "tt0087843",  # Once Upon a Time in America
+            "tt0110357",  # The Lion King
+            "tt0209144",  # Memento
+            "tt0120586",  # American History X
+            "tt0080684",  # Star Wars: Episode V - The Empire Strikes Back
+            "tt0114814",  # The Usual Suspects
+            "tt0057012",  # Dr. Strangelove
+            "tt0078788",  # Apocalypse Now
+            "tt0043014",  # Sunset Boulevard
+            "tt0093058",  # Full Metal Jacket
+            "tt1853728",  # Django Unchained
+            "tt0407887",  # The Departed
+            "tt0482571",  # The Prestige
+            "tt0112573",  # Braveheart
+            "tt0114709",  # Toy Story
+            "tt0245429",  # Spirited Away
+            "tt0172495",  # Gladiator
+            "tt0120689",  # The Green Mile
+            "tt0317248",  # City of God
+            "tt0086190",  # Star Wars: Episode VI - Return of the Jedi
+            "tt0105236",  # Reservoir Dogs
+            "tt1675434",  # The Intouchables
+            "tt0060196",  # The Good, the Bad and the Ugly
+            "tt0052357",  # Vertigo
+            "tt0027977",  # Modern Times
+            "tt0064116",
+            "tt0107290",  # Jurassic Park (1993) - Classique Spielberg
+            "tt0119217",  # Good Will Hunting (1997) - Drame brillant
+            "tt0120382",  # The Truman Show (1998) - Satire géniale
+            "tt0253474",  # The Pianist (2002) - Chef-d'œuvre historique
+            "tt0268978",  # A Beautiful Mind (2001) - Drame biographique
+            "tt0289879",  # The Butterfly Effect (2004) - Sci-fi psychologique
+            "tt0364569", 
+            "tt0758758",
         ]
         
         # CRÉER L'INSTANCE DU FETCHER
@@ -88,15 +143,7 @@ def init_db():
                     )
                     db.add(movie)
                     movies.append(movie)
-                    print(f"   ✅ {movie_data['title']} ({year or 'N/A'})")
-                    if movie_data.get("backdrop_url"):
-                        print(f"      🖼️  Backdrop: OUI")
-                    else:
-                        print(f"      ⚠️  Backdrop: NON")
-                else:
-                    print(f"   ❌ Impossible de récupérer le film avec ID {imdb_id}")
             except Exception as e:
-                print(f"   ❌ Erreur pour {imdb_id}: {str(e)}")
                 import traceback
                 traceback.print_exc()
         
@@ -171,15 +218,6 @@ def init_db():
         print("✅ Base de données initialisée avec succès!")
         print(f"   - {len(users)} utilisateurs créés")
         print(f"   - {len(movies)} films créés")
-        
-        # Afficher les backdrops créés
-        print("\n🔍 Vérification des backdrops:")
-        for movie in movies:
-            if movie.backdrop_url:
-                print(f"   ✅ {movie.title}: BACKDROP PRÉSENT")
-                print(f"      URL: {movie.backdrop_url[:80]}...")
-            else:
-                print(f"   ❌ {movie.title}: BACKDROP MANQUANT!")
         
         print("\n📝 Identifiants de test:")
         print("   - Username: alice | Password: password123")

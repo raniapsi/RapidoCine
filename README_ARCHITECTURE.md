@@ -2,7 +2,7 @@
 
 Application web moderne de type IMDb clone, développée avec **FastAPI** (backend SSR) et **Jinja2** (templates), utilisant **SQLite** en développement et **PostgreSQL** en production.
 
-## 🏗️ Architecture
+## Architecture
 
 ### Architecture SSR (Server-Side Rendering)
 
@@ -93,7 +93,7 @@ RapidoCine/
 ```
 
 
-## 🚀 Installation et Démarrage
+##  Installation et Démarrage
 
 ### Prérequis
 - Python 3.11+
@@ -159,8 +159,8 @@ uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 
 ### Identifiants de test
 
-| Username |   Password  |
-|----------|----------6--|
+| Username | Password    |
+|----------|-------------|
 | alice    | password123 |
 | bob      | password123 |
 | charlie  | password123 |
@@ -227,34 +227,49 @@ uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 - **ReDoc** : http://localhost:8000/api/redoc
 
 
-## ✅ Fonctionnalités essentielles
+##  Fonctionnalités essentielles
 
-•⁠  ⁠Authentification
-Inscription : username, nom, prénom, adresse
-Connexion / Déconnexion : username, password
-Une fois connecté, la déconnexion est disponible sur toutes les pages.
-•⁠  ⁠Page d’accueil
-Affichage des films disponibles
-Ajout d’un film en favoris : lien avec la watchlist
-•⁠  ⁠Page film
-Filtrer par genre (action, comédie, etc.) 
-Aperçu des films classés par note IMDB
-Aperçu des notes attribuées par l’ensemble des utilisateurs IMDB (via une API IMDB) sur chaque film 
-•⁠  ⁠Page d’un film
-Aperçu de la description du film
-Attribution de notes
-Visualisation de trois classements :
-Celui de l’utilisateur
-Celui de tous les utilisateurs de RapidoCiné
-Celui d’IMDB
-Possibilité de publier des commentaires sur le film
-Consultation de tous les commentaires du film par les autres utilisateurs de RapidoCiné 
-•⁠  ⁠Page "Mon classement"
-Permet de voir les films classés selon les notes attribuées par l’utilisateur
-•⁠  ⁠Page watchlist
-Tous les films mis en favoris par l’utilisateur y sont affichés
+### Fonctionnalités détaillées
 
-## 🛠 Plan d'action
+#### Authentification
+
+* Inscription : username, nom, prénom, adresse
+* Connexion / Déconnexion : username, password
+* Une fois connecté, la déconnexion est disponible sur toutes les pages.
+
+#### Page d’accueil
+
+* Affichage des films disponibles
+* Ajout d’un film en favoris (watchlist)
+
+#### Page film
+
+* Filtrer par genre (action, comédie, etc.)
+* Aperçu des films classés par note IMDb
+* Aperçu des notes attribuées par l’ensemble des utilisateurs IMDb (via une API IMDb)
+
+#### Page d’un film
+
+* Aperçu de la description du film
+* Attribution de notes
+* Visualisation de trois classements :
+
+  * Celui de l’utilisateur
+  * Celui de tous les utilisateurs de RapidoCiné
+  * Celui d’IMDb
+* Possibilité de publier des commentaires sur le film
+* Consultation de tous les commentaires du film par les autres utilisateurs de RapidoCiné
+
+#### Page "Mon classement"
+
+* Affichage des films classés selon les notes attribuées par l’utilisateur
+
+#### Page watchlist
+
+* Tous les films mis en favoris par l’utilisateur y sont affichés
+
+
+##  Plan d'action
 
 1. Préparation 
    - Créer le repo GitHub + structure initiale (backend/, frontend/, docker-compose.yml).
@@ -267,7 +282,7 @@ Tous les films mis en favoris par l’utilisateur y sont affichés
    - Pages HTML/CSS/JS : index, films, cinémas, séances, détail film.
    - Connexion aux endpoints API.
 
-## 📦 Livrable
+##  Livrable
 
 ### 1. Schéma de la base de données
 
@@ -451,23 +466,23 @@ CONSTRAINT unique_user_movie_watchlist: UNIQUE(user_id, movie_id)
 
 ### 5. Plan d'action (tâches concrètes réalisées)
 
-✅ **Phase 1 : Initialisation**
+ **Phase 1 : Initialisation**
 - Repository GitHub créé et structuré (backend/, frontend/)
 - Configuration .env avec OMDb API key
 - SQLite configuré pour développement
 
-✅ **Phase 2 : Backend**
+ **Phase 2 : Backend**
 - 5 modèles SQLAlchemy avec relations (users, movies, ratings, comments, watchlist)
 - 5 routeurs API REST (30+ endpoints)
 - Script init_db.py pour import automatique 10 films
 
-✅ **Phase 3 : Frontend**
+ **Phase 3 : Frontend**
 - 7 templates Jinja2 (base, index, login, register, movies, movie, top_rated)
 - CSS moderne avec gradients et animations
 - JavaScript vanilla (rating.js, carousel.js)
 - Design responsive
 
-✅ **Phase 4 : Intégration**
+ **Phase 4 : Intégration**
 - OMDb API intégrée (MovieFetcherService)
 - Système de sessions (SessionMiddleware)
 - Tests manuels de tous les endpoints
@@ -522,7 +537,7 @@ CORS_ORIGINS=http://localhost,http://localhost:8000,http://127.0.0.1
 4. Vérifiez votre email et activez la clé
 5. Copiez la clé dans votre fichier `.env`
 
-## 📊 Flux de Données
+##  Flux de Données
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -572,7 +587,7 @@ CORS_ORIGINS=http://localhost,http://localhost:8000,http://127.0.0.1
 └─────────────────────────────────────────────┘
 ```
 
-## 🎨 Technologies Utilisées
+##  Technologies Utilisées
 
 ### Backend
 - **Framework** : FastAPI 0.109 (async/await)
@@ -602,7 +617,7 @@ CORS_ORIGINS=http://localhost,http://localhost:8000,http://127.0.0.1
   - Limite gratuite : 1000 req/jour
   - Données : titre, année, poster, synopsis, genres, IMDb ID
 
-## 🛠️ Commandes Utiles
+##  Commandes Utiles
 
 
 ### Tester l'API
@@ -620,7 +635,7 @@ curl -X POST http://localhost:8000/api/users/ \
   -d '{"username":"test","email":"test@example.com","password":"test123"}'
 ```
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Erreur `ModuleNotFoundError: No module named 'fastapi'`
 
@@ -674,7 +689,7 @@ Vérifiez `backend/config.py` :
 CORS_ORIGINS: list = ["http://localhost:8000", "*"]
 ```
 
-## 📄 Licence
+## Licence
 
 Projet académique - Télécom SudParis - CSC 8567
 

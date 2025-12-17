@@ -8,23 +8,35 @@
     <!-- Home Content -->
     <div class="poster" style="background-color: #000000;">
         <!-- Simple Carousel -->
-        <div class="carousel">
+        <div class="carousel" style="height: 70vh; min-height: 500px; max-height: 700px; position: relative; overflow: hidden;">
             {% for movie in featured_movies %}
-            <div class="carousel-slide posterImage" {% if not loop.first %}style="display: none;"{% endif %}>
-                <a href="/movie/{{ movie.id }}" style="text-decoration: none; color: white; display: block; height: 100%;">
+            <div class="carousel-slide movie__backdrop" {% if not loop.first %}style="display: none;"{% endif %} style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;">
+                <a href="/movie/{{ movie.id }}" style="text-decoration: none; color: white; display: block; width: 100%; height: 100%;">
                     <!-- Dégradé noir avec poster en arrière-plan -->
-                    <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); position: relative;">
+                    <div style="width: 100%; height: 100%; position: relative; overflow: hidden;">
                         <!-- Poster en arrière-plan (à gauche) -->
-                        <img src="{{ movie.poster_url or 'https://via.placeholder.com/300x450?text=No+Image' }}" 
+                        <img src="{{ movie.backdrop_url or 'https://via.placeholder.com/300x450?text=No+Image' }}" 
                              alt="{{ movie.title }}" 
-                             style="position: absolute; left: 100px; top: 50%; transform: translateY(-50%); height: 450px; width: 300px; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.9); opacity: 0.4;" />
+                             style="
+                            position: absolute;
+                            width: 105%;        /* ← Zoom léger (105% au lieu de 100%) */
+                            height: 105%;       /* ← Zoom léger */
+                            object-fit: cover;
+                            object-position: center top;
+                            filter: brightness(0.75);
+                            top: -2.5%;         /* ← Compense le zoom */
+                            left: -2.5%;        /* ← Compense le zoom */
+                            transition: transform 0.5s ease;
+                         " 
+                         onmouseover="this.style.transform='scale(1.02)';" 
+                         onmouseout="this.style.transform='scale(1)';" />
                     </div>
                     <div class="posterImage__overlay">
                         <div class="posterImage__title">{{ movie.title }}</div>
                         <div class="posterImage__runtime">
                             {{ movie.year }}
                         </div>
-                        <div class="posterImage__description">{{ movie.plot or 'Aucune description disponible' }}</div>
+                        <div class="posterImage__description">{% if movie.plot %}{% set words = movie.plot.split() %}{% if words|length > 50 %}{{ words[:70]|join(' ') }} ...{% else %}{{ movie.plot }}{% endif %}{% else %}Aucune description disponible{% endif %}</div>
                     </div>
                 </a>
             </div>
@@ -40,7 +52,28 @@
                 <a href="/movies" style="text-decoration: none"><span>Films</span></a>
                 <a href="/movies/top_rated" style="text-decoration: none"><span>Mon Classement</span></a>
                 <a href="/movies/watchlist" style="text-decoration: none"><span>Watchlist</span></a>
+                <a href="/add-movie" style="text-decoration: none"><span>➕ Ajouter un film</span>
+                </a>
             </div>
+
+                            <!-- Search Bar -->
+                <div class="header-search-container">
+                    <div class="search-input-wrapper">
+                        <input 
+                            type="text" 
+                            id="header-search-input" 
+                            class="search-input"
+                            placeholder="Rechercher un film..." 
+                            autocomplete="off"
+                        >
+                        <div class="search-icon">🔍</div>
+                    </div>
+                    
+                    <!-- Search Results Dropdown -->
+                    <div id="header-search-results" class="search-results-dropdown">
+                        <!-- Results will be inserted here by JavaScript -->
+                    </div>
+                </div>
         </div>
 
         <!-- Movie List Section -->

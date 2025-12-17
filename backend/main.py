@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException, Depends, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from typing import Optional
@@ -105,7 +105,7 @@ async def home(request: Request, db: Session = Depends(get_db)):
     
     # Sélectionner quelques films populaires avec poster pour le carrousel
     popular_movies = [m for m in all_movies if m.plot and m.poster_url]
-    featured_movies = random.sample(popular_movies, min(len(popular_movies), 5)) if popular_movies else []
+    featured_movies = popular_movies
 
     # Préparer la wishlist de l'utilisateur connecté
     watchlist_ids = []
@@ -641,4 +641,193 @@ async def api_get_imdb_rating(movie_id: int, db: Session = Depends(get_db)):
         "imdb_rating_5": rating_5,
         "source": "omdb_live" if rating_10 else "unavailable"
     }
+    
+@app.get("/add-movie", response_class=HTMLResponse)
+async def add_movie_page(request: Request, db: Session = Depends(get_db)):
+    """Page pour ajouter un film"""
+    current_user = None
+    if request.session.get("user_id"):
+        current_user = {
+            "id": request.session["user_id"],
+            "username": request.session["username"]
+        }
+    
+    # Récupérer les films récemment ajoutés
+    from backend.services.movie_service import MovieService
+    recent_movies = MovieService.get_recently_added(db, limit=6)
+    
+    return templates.TemplateResponse("add_movie.html", {
+        "request": request,
+        "current_user": current_user,
+        "recent_movies": recent_movies,
+        "api_url": "/api"
+    })
+
+@app.get("/api/search/external")
+async def search_external_movies_api(
+    query: str = "", 
+    db: Session = Depends(get_db)
+):
+    """API pour rechercher des films sur OMDb (auto-complétion)"""
+    if len(query) < 2:
+        return {"results": []}
+    
+    try:
+        from backend.services.movie_service import MovieService
+        results = MovieService.search_external_movies(query)
+        
+        return {"results": results}
+    except Exception as e:
+        print(f"❌ Erreur recherche externe: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"results": [], "error": str(e)}
+        )
+
+@app.post("/api/movies/add")
+async def add_movie_by_imdb_api(
+    request: Request,
+    imdb_id: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """API pour ajouter un film depuis IMDb ID"""
+    # Vérifier authentification
+    if not request.session.get("user_id"):
+        return JSONResponse(
+            status_code=401,
+            content={"status": "error", "message": "Connectez-vous pour ajouter un film"}
+        )
+    
+    from backend.services.movie_service import MovieService
+    
+    try:
+        # Vérifier si le film existe déjà
+        existing = MovieService.get_by_imdb_id(db, imdb_id)
+        if existing:
+            return JSONResponse(
+                content={
+                    "status": "exists",
+                    "message": f"Le film '{existing.title}' existe déjà",
+                    "movie_id": existing.id
+                }
+            )
+        
+        # Créer le film
+        movie = MovieService.create_from_imdb_id(db, imdb_id)
+        
+        if not movie:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error", 
+                    "message": "Impossible de récupérer le film depuis OMDb"
+                }
+            )
+        
+        return JSONResponse(
+            content={
+                "status": "success",
+                "message": f"Film '{movie.title}' ajouté avec succès !",
+                "movie_id": movie.id,
+                "movie_title": movie.title,
+                "movie_year": movie.year
+            }
+        )
+        
+    except Exception as e:
+        print(f"❌ Erreur ajout film: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Erreur serveur: {str(e)}"
+            }
+        )
+
+# Ajoute aussi un lien dans la homepage pour tester
+@app.get("/test-add")
+async def test_add_page():
+    """Page de test pour l'ajout de films"""
+    return HTMLResponse("""
+    <html>
+        <body>
+            <h1>Test Ajout Film</h1>
+            <input type="text" id="search" placeholder="Chercher un film...">
+            <div id="results"></div>
+            <script>
+                const search = document.getElementById('search');
+                search.addEventListener('input', async (e) => {
+                    const query = e.target.value;
+                    if (query.length < 2) return;
+                    
+                    const res = await fetch(`/api/search/external?query=${query}`);
+                    const data = await res.json();
+                    
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = data.results.map(m => `
+                        <div>${m.title} (${m.year}) - ${m.imdb_id}</div>
+                    `).join('');
+                });
+            </script>
+        </body>
+    </html>
+    """)
+    
+@app.get("/api/search/movies")
+async def search_movies_api(
+    query: str = "", 
+    db: Session = Depends(get_db)
+):
+    """API pour rechercher des films dans la base de données"""
+    print(f"🔍 SEARCH API called with query: '{query}'")
+    
+    from backend.services.movie_service import MovieService
+    results = MovieService.search_by_title(db, query)
+    
+    # Convert SQLAlchemy objects to dictionaries
+    movies_data = []
+    for movie in results[:20]:
+        movies_data.append({
+            "id": movie.id,
+            "title": movie.title,
+            "year": movie.year,
+            "poster_url": movie.poster_url,
+            "imdb_id": movie.imdb_id,
+            "plot": movie.plot,
+            "genres": movie.genres
+        })
+    
+    print(f"📊 Returning {len(movies_data)} movies for query: '{query}'")
+    return movies_data
+
+@app.get("/search")
+async def search_page(request: Request, query: str = "", db: Session = Depends(get_db)):
+    """Page de résultats de recherche"""
+    current_user = None
+    if request.session.get("user_id"):
+        current_user = {
+            "id": request.session["user_id"],
+            "username": request.session["username"]
+        }
+    
+    results = []
+    if query:
+        from backend.services.movie_service import MovieService
+        results = MovieService.search_by_title(db, query)
+    
+    watchlist_ids = []
+    if current_user:
+        from backend.models import Watchlist
+        watchlist_ids = [row[0] for row in db.query(Watchlist.movie_id).filter(Watchlist.user_id == current_user["id"]).all()]
+    
+    return templates.TemplateResponse("movies.html", {
+        "request": request,
+        "movies": results,
+        "list_title": f"Résultats pour: '{query}'",
+        "title": "Recherche",
+        "current_user": current_user,
+        "watchlist_ids": watchlist_ids,
+        "show_imdb_rating": True,
+        "search_query": query
+    })
 
