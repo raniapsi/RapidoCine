@@ -4,20 +4,8 @@ kind: Kustomization
 namespace: rapidocine-dev
 
 # Base configuration
-bases:
+resources:
   - ../../base
-
-# Development-specific patches
-patchesStrategicMerge:
-  - deployment-patch.yaml
-  - ingress-patch.yaml
-
-# Development ConfigMap
-configMapGenerator:
-  - name: rapidocine-config
-    behavior: merge
-    literals:
-      - DEBUG=True
 
 # Development replicas
 replicas:
@@ -30,5 +18,36 @@ images:
     newName: rapidocine
     newTag: dev
 
-commonLabels:
-  environment: development
+labels:
+  - pairs:
+      environment: development
+
+# Patches using JSON6902 format
+patches:
+  - target:
+      kind: Deployment
+      name: rapidocine-app
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: "50m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+  - target:
+      kind: ConfigMap
+      name: rapidocine-config
+    patch: |-
+      - op: replace
+        path: /data/DEBUG
+        value: "True"
+  - target:
+      kind: Ingress
+      name: rapidocine-ingress
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: "rapidocine-dev.example.com"

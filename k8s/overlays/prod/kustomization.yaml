@@ -4,20 +4,8 @@ kind: Kustomization
 namespace: rapidocine
 
 # Base configuration
-bases:
+resources:
   - ../../base
-
-# Production-specific patches
-patchesStrategicMerge:
-  - deployment-patch.yaml
-  - ingress-patch.yaml
-
-# Production ConfigMap
-configMapGenerator:
-  - name: rapidocine-config
-    behavior: merge
-    literals:
-      - DEBUG=False
 
 # Production replicas
 replicas:
@@ -30,5 +18,42 @@ images:
     newName: rapidocine
     newTag: v1.0.0  # Change to actual version
 
-commonLabels:
-  environment: production
+labels:
+  - pairs:
+      environment: production
+
+# Patches using JSON6902 format
+patches:
+  - target:
+      kind: Deployment
+      name: rapidocine-app
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: "200m"
+            memory: "512Mi"
+          limits:
+            cpu: "2000m"
+            memory: "1Gi"
+  - target:
+      kind: ConfigMap
+      name: rapidocine-config
+    patch: |-
+      - op: replace
+        path: /data/DEBUG
+        value: "False"
+  - target:
+      kind: Ingress
+      name: rapidocine-ingress
+    patch: |-
+      - op: add
+        path: /metadata/annotations/cert-manager.io~1cluster-issuer
+        value: "letsencrypt-prod"
+      - op: add
+        path: /spec/tls
+        value:
+          - hosts:
+              - rapidocine.example.com
+            secretName: rapidocine-tls
