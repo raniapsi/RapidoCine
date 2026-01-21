@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rapidocine-config
+  namespace: rapidocine
+  labels:
+    app: rapidocine
+data:
+  # Application configuration
+  DEBUG: "False"
+  # Database connection (constructed from secret values at runtime)
+  # DATABASE_URL will be injected via environment variables in deployment

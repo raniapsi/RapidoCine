@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: rapidocine
+
+# Base configuration
+bases:
+  - ../../base
+
+# Production-specific patches
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  - ingress-patch.yaml
+
+# Production ConfigMap
+configMapGenerator:
+  - name: rapidocine-config
+    behavior: merge
+    literals:
+      - DEBUG=False
+
+# Production replicas
+replicas:
+  - name: rapidocine-app
+    count: 3
+
+# Production images (should use specific version tags, not latest)
+images:
+  - name: rapidocine
+    newName: rapidocine
+    newTag: v1.0.0  # Change to actual version
+
+commonLabels:
+  environment: production
