@@ -14,7 +14,7 @@ services:
     networks:
       - rapidocine_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U rapidocine"]
+      test: ["CMD-SHELL", "pg_isready -d rapidocine_db -U rapidocine"]
       interval: 10s
       timeout: 5s
       retries: 5
