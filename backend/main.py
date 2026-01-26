@@ -74,6 +74,24 @@ app.include_router(comments_router, prefix="/api")
 app.include_router(watchlist_router, prefix="/api")
 
 
+# ========== HEALTH CHECK ENDPOINTS ==========
+@app.get("/health")
+async def health_check():
+    """Kubernetes liveness probe endpoint - checks if the application is running."""
+    return {"status": "healthy", "service": "rapidocine"}
+
+
+@app.get("/ready")
+async def readiness_check(db: Session = Depends(get_db)):
+    """Kubernetes readiness probe endpoint - checks if the application is ready to serve traffic."""
+    try:
+        # Check database connection
+        db.execute("SELECT 1")
+        return {"status": "ready", "database": "connected"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Database not ready: {str(e)}")
+
+
 # ========== FRONTEND ROUTES ==========
 
 async def enrich_movies_with_imdb(movies: list) -> list:

@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rapidocine-app
+  namespace: rapidocine
+  labels:
+    app: rapidocine
+    component: app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rapidocine
+      component: app
+  template:
+    metadata:
+      labels:
+        app: rapidocine
+        component: app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Add init container to wait for database
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z postgres 5432; do
+                echo "Waiting for postgres..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready!"
+      containers:
+        - name: rapidocine
+          # Replace with your actual Docker registry and image
+          # Example: ghcr.io/raniapsi/rapidocine:latest
+          image: rapidocine:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rapidocine-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rapidocine-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: rapidocine-secrets
+                  key: POSTGRES_DB
+            - name: OMDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rapidocine-secrets
+                  key: OMDB_API_KEY
+            - name: SESSION_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rapidocine-secrets
+                  key: SESSION_SECRET_KEY
+            - name: DEBUG
+              valueFrom:
+                configMapKeyRef:
+                  name: rapidocine-config
+                  key: DEBUG
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for database..."
+              sleep 5
+              echo "Initializing database..."
+              python -m backend.init_db
+              echo "Starting SSR server..."
+              uvicorn backend.main:app --host 0.0.0.0 --port 8000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      # Security context
+      securityContext:
+        runAsNonRoot: false  # Set to true if your image runs as non-root
+        fsGroup: 1000

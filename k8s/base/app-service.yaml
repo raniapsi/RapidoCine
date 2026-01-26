@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rapidocine-app
+  namespace: rapidocine
+  labels:
+    app: rapidocine
+    component: app
+spec:
+  type: ClusterIP
+  selector:
+    app: rapidocine
+    component: app
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8000
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hours - important for session-based apps
